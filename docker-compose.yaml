@@ -1,0 +1,29 @@
+version: '3'
+services:
+    internal:
+        build: ai
+        volumes:
+            - ./ai:/app
+            - ./secret.yaml:/etc/secrets/gcloud/secret.yaml
+        ports:
+            - '8080:8080'
+        command: "sh -c 'while true; do sleep 10; done'"
+        environment:
+            PORT: '8080'
+
+    database:
+        image: 'ankane/pgvector'
+        volumes:
+            - ./db-data:/var/lib/postgresql/data/
+        ports:
+            - 5432:5432
+        environment:
+            POSTGRES_USER: root
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: video_script_research
+
+    unstructured:
+        image: quay.io/unstructured-io/unstructured-api:0.0.30
+        ports:
+            - '8000:8000'
+
