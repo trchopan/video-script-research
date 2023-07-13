@@ -7,7 +7,7 @@ services:
             - ./secret.yaml:/etc/secrets/gcloud/secret.yaml
         ports:
             - '6969:8080'
-        command: "sh -c 'while true; do sleep 10; done'"
+        command: "tail -f /dev/null"
         # command: "sh run.sh"
         environment:
             PORT: '8080'
