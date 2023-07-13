@@ -65,6 +65,12 @@ def youtube_transcript_similarity():
     similarity = youtube_transcript_svc.get_similarity(query, links, k=k or 5)
     return {"similarity": [s.to_dict() for s in similarity]}, 200
 
+@app.post("/general_knowledge_wikipedia_search")
+@with_handle_require_validate
+def general_knowledge_wikipedia_search():
+    [search] = request_json_require_validate(["search"])
+    return {"search_results": general_knowledge_svc.search_page(search)}, 200
+
 @app.post("/general_knowledge_wikipedia_page")
 @with_handle_require_validate
 def general_knowledge_wikipedia_page():

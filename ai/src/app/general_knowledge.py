@@ -5,6 +5,9 @@ class GeneralKnowledgeService:
     def __init__(self, chat: ChatOpenAI):
         self.chat = chat
 
+    def search_page(self, search: str):
+        return wikipedia.search(search)
+
     def get_wikipedia_page(self, search: str) -> str:
         return wikipedia.page(search).content
 

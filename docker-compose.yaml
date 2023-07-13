@@ -6,8 +6,9 @@ services:
             - ./ai:/app
             - ./secret.yaml:/etc/secrets/gcloud/secret.yaml
         ports:
-            - '8080:8080'
+            - '6969:8080'
         command: "sh -c 'while true; do sleep 10; done'"
+        # command: "sh run.sh"
         environment:
             PORT: '8080'
 
@@ -15,15 +16,17 @@ services:
         image: 'ankane/pgvector'
         volumes:
             - ./db-data:/var/lib/postgresql/data/
-        ports:
-            - 5432:5432
+        # Only expose ports for debug
+        # ports:
+        #     - 5432:5432
         environment:
             POSTGRES_USER: root
             POSTGRES_PASSWORD: password
             POSTGRES_DB: video_script_research
 
-    unstructured:
-        image: quay.io/unstructured-io/unstructured-api:0.0.30
-        ports:
-            - '8000:8000'
+    # Not yet require this service in this application
+    # unstructured:
+    #     image: quay.io/unstructured-io/unstructured-api:0.0.30
+    #     ports:
+    #         - '8000:8000'
 

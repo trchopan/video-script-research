@@ -12,12 +12,11 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
     SystemMessagePromptTemplate,
 )
-from app.embedding_store import EmbeddingStore
+from app.vector_store import VectorStore
 from app.helpers import find_element
 
 
-from .base_model import BaseModel, from_int, from_str, to_float
-
+from .base_model import BaseModel, from_int, from_str, get_db, to_float
 
 class YoutubeVideo(BaseModel):
     video_id = CharField()
@@ -100,12 +99,12 @@ class YoutubeTranscriptService:
         api_key: str,
         chat: ChatOpenAI,
         embeddings: OpenAIEmbeddings,
-        embedding_store: EmbeddingStore,
+        vector_store: VectorStore,
     ):
         self.api_key = api_key
         self.chat = chat
         self.embeddings = embeddings
-        self.embedding_store = embedding_store
+        self.vector_store = vector_store
 
     _puncturation_prompt = ChatPromptTemplate.from_messages(
         [
@@ -175,7 +174,7 @@ class YoutubeTranscriptService:
                 YoutubeTranscript.video_id == video_id
             ).execute()
 
-            self.embedding_store.delete_embeddings(
+            self.vector_store.delete_embeddings(
                 namespace=self._EMBEDDING_NAMESPACE,
                 document=video_id,
             )
@@ -257,7 +256,7 @@ class YoutubeTranscriptService:
             )
             transcript.save()
 
-            self.embedding_store.insert_embeddings(
+            self.vector_store.insert_embeddings(
                 namespace=self._EMBEDDING_NAMESPACE,
                 document=video_id,
                 chunk=i,
@@ -270,10 +269,10 @@ class YoutubeTranscriptService:
 
     def get_embeddings(self, link: str):
         video_id = self.get_youtube_video_id(link) or ""
-        embeddings = self.embedding_store.get_embeddings(
+        embeddings = self.vector_store.get_embeddings(
             namespace=self._EMBEDDING_NAMESPACE, document=video_id
         )
-        return [[float(ee) for ee in e] for (e,) in embeddings]
+        return embeddings
 
     def get_similarity(self, query: str, links: List[str], k: int = 5):
         video_ids = [self.get_youtube_video_id(link) or "" for link in links]
@@ -282,7 +281,7 @@ class YoutubeTranscriptService:
         similarity_results: List[YoutubeTranscriptSimilarity] = []
         single_limit = round(k / len(links))
         for video_id in video_ids:
-            similarities = self.embedding_store.similarity_search(
+            similarities = self.vector_store.similarity_search(
                 query_embedding,
                 namespace=self._EMBEDDING_NAMESPACE,
                 document=video_id,
@@ -333,3 +332,7 @@ class YoutubeTranscriptService:
                 return query.path.split("/")[2]
         # fail?
         return None
+
+
+# Create table if not exists
+get_db().create_tables([YoutubeVideo, YoutubeTranscript])

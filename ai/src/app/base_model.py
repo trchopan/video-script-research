@@ -1,22 +1,20 @@
 from typing import Any, List, TypeVar, Callable, Type, cast
 
-from peewee import Model
-from playhouse.pool import PooledPostgresqlExtDatabase
+from peewee import Model, PostgresqlDatabase
 
-db = PooledPostgresqlExtDatabase(
-    "video_script_research",
-    user="root",
-    password="password",
-    host="database",
-    port=5432,
-    max_connections=8,
-    stale_timeout=300,
-)
+def get_db():
+    return PostgresqlDatabase(
+        "video_script_research",
+        user="root",
+        password="password",
+        host="database",
+        port=5432,
+    )
 
 
 class BaseModel(Model):
     class Meta:
-        database = db
+        database = get_db()
 
 
 T = TypeVar("T")
