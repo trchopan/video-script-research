@@ -15,8 +15,9 @@ class AssistantWriterService:
     _extend_content_template = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
-                "You are a content writer assistant who helps continue writing CONTENT below. "
-                "Use the CONTEXT for more information to extend the CONTENT.\n\n"
+                "You are a content writer assistant who helps continue writing "
+                "CONTENT below. Use the CONTEXT for more information to extend "
+                "the CONTENT.\n\n"
                 "CONTEXT:\n{context}\n\n"
             ),
             HumanMessagePromptTemplate.from_template("CONTENT:\n{content}"),
@@ -34,7 +35,8 @@ class AssistantWriterService:
     _translate_content = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
-                "You are a translator. Given a TEXT in English, help translate it to {language}.\n"
+                "You are a translator. Given a TEXT in English, help translate it "
+                "to {language}.\n"
             ),
             HumanMessagePromptTemplate.from_template("TEXT:\n{text}\n\nOUTPUT:"),
         ]
@@ -48,10 +50,11 @@ class AssistantWriterService:
     _extract_information_template = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
-                "You are a content assistant who helps the user extract the information "
-                "from the DOCUMENTS given below. "
-                "Write the extracted information as a bullet point list into the SCRATCH PAD. "
-                "Only extract the information and do not hallucinate.\n\n"
+                "You are a content assistant who helps the user extract "
+                "the information from the DOCUMENTS given below. "
+                "Write the extracted information as a bullet point list into "
+                "the SCRATCH PAD. Only extract the information and "
+                "do not hallucinate.\n\n"
                 "DOCUMENTS:\n{documents}\n\n"
             ),
             HumanMessagePromptTemplate.from_template("SCRATCH PAD:"),
@@ -76,7 +79,6 @@ class AssistantWriterService:
         prompt = self._format_template.format_prompt(text=text)
         result = send_chat_prompt_with_print(self.chat, prompt)
         return result.content
-
 
     def get_chat(self, chat: str):
         result = self.chat([HumanMessage(content=chat)])

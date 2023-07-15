@@ -1,11 +1,12 @@
-import {get, writable} from 'svelte/store';
+import {get, writable, type Writable} from 'svelte/store';
 import {
     type YoutubeVideo,
     type YoutubeSimilarity,
     type YoutubeTranscript,
     Tile,
 } from '@/repositories/types';
-import {GeneralKnowledgeRepo, YoutubeRepo} from './repositories/inject';
+import {AppStateRepo, YoutubeRepo} from './repositories/inject';
+import {debounce, isEmpty} from 'lodash';
 
 export const openTranscript = writable(false);
 
@@ -39,54 +40,71 @@ export const getNewVideoTranscript = async (youtubeUrl: string) => {
     }
 };
 
-export const wikipediaSearchString = writable('');
-export const wikipediaSearchResult = writable('');
-export const loadingWikipediaSearch = writable<boolean>(false);
-export const getWikipediaPage = async (opt: {summary: boolean} = {summary: false}) => {
-    loadingWikipediaSearch.set(true);
-    try {
-        const searchString = get(wikipediaSearchString);
-        const page = opt.summary
-            ? await GeneralKnowledgeRepo.wikipediaSummary(searchString)
-            : await GeneralKnowledgeRepo.wikipediaPage(searchString);
-        wikipediaSearchResult.set(page);
-    } finally {
-        loadingWikipediaSearch.set(false);
-    }
-};
+export const searchResult = writable('');
+export const multipleSearchResults = writable<string[]>([]);
 
 export const researchVideoIds = writable<string[]>([]);
 export const contexts = writable<string[]>([]);
 export const content = writable('');
 
-const loadList = [
-    {val: researchVideoIds, key: 'researchVideoIds'},
-    {val: wikipediaSearchString, key: 'wikipediaSearchString'},
-    {val: wikipediaSearchResult, key: 'wikipediaSearchResult'},
-    {val: content, key: 'content'},
-    {val: contexts, key: 'contexts'},
-];
-
-let loaded = false;
-
-export const loadLocalStorage = () => {
-    if (loaded) return;
-
-    for (const toLoad of loadList) {
-        try {
-            const savedContent = JSON.parse(window.localStorage.getItem(toLoad.key) || '');
-            toLoad.val.set(savedContent);
-        } catch {
-            console.log('>>> not saved', toLoad.key);
-        }
-        toLoad.val.subscribe((v: any) => {
-            console.log('>>>', toLoad.key, v);
-            window.localStorage.setItem(toLoad.key, JSON.stringify(v));
-        });
-    }
-
-    loaded = true;
+type StringOrStringArray = string | string[];
+interface LoadList {
+    [key: string]: {val: Writable<StringOrStringArray>; default: StringOrStringArray};
+}
+const loadList: LoadList = {
+    researchVideoIds: {val: researchVideoIds, default: []},
+    // wikipediaSearchString: {val: wikipediaSearchString, default: ''},
+    // wikipediaSearchResult: {val: wikipediaSearchResult, default: ''},
+    content: {val: content, default: ''},
+    contexts: {val: contexts, default: []},
 };
+
+export const saveAppState = () => {
+    const app_id = get(currentAppId);
+    if (!app_id) return;
+    const newData = Object.entries(loadList).reduce((acc, [k, v]) => {
+        acc[k] = get(v.val);
+        return acc;
+    }, {} as {[key: string]: StringOrStringArray});
+    AppStateRepo.save(app_id, newData);
+};
+
+export const loadAppState = async () => {
+    const app_id = window.localStorage.getItem('app_id');
+    if (!app_id) return;
+
+    const appState = await AppStateRepo.get(app_id);
+
+    for (const [key, value] of Object.entries(loadList)) {
+        try {
+            const data = appState.data[key];
+            if (!isEmpty(data)) {
+                value.val.set(data);
+            } else {
+                value.val.set(value.default);
+            }
+        } catch {
+            console.log('>>> not saved', key);
+        }
+    }
+};
+
+const debouncedSaveAppState = debounce(() => saveAppState(), 5 * 1000);
+const initAppState = async () => {
+    await loadAppState();
+    Object.values(loadList).map(value =>
+        value.val.subscribe(() => {
+            debouncedSaveAppState();
+        })
+    );
+};
+initAppState();
+
+export const currentAppId = writable<string>(window.localStorage.getItem('app_id') || '');
+currentAppId.subscribe(app_id => {
+    window.localStorage.setItem('app_id', app_id);
+    loadAppState();
+});
 
 export const ytVideoShow = writable(false);
 export const ytReady = writable(false);

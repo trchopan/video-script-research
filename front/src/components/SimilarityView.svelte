@@ -23,21 +23,20 @@
 </script>
 
 <div class="flex flex-col gap-5">
-    <div class="flex gap-5">
+    <form class="flex gap-5" on:submit|preventDefault={() => onQuerySimilarity()}>
         <input bind:value={$similarityQuery} class="input" type="text" placeholder="Input" />
         <Loading {loading}>
-            <button on:click={() => onQuerySimilarity()} class="btn variant-ringed-secondary">
-                Query
-            </button>
+            <button type="submit" class="btn variant-ringed-primary">Query</button>
         </Loading>
-    </div>
+    </form>
     <HalfPageWithLoading {loading}>
         {#each $similarities as similarity}
+            {@const foundVideo = findVideo(similarity.document)}
             <div>
-                <div class="text-red-400">{findVideo(similarity.document)?.title}</div>
+                <div class="text-red-400">{foundVideo?.title}</div>
                 <ChunkInfo
                     chunk={{
-                        video_id: findVideo(similarity.document)?.video_id || '',
+                        video_id: foundVideo?.video_id || '',
                         chunk: similarity.chunk,
                         start: similarity.start,
                         text: similarity.content,

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import {getSelectionText} from '@/helpers';
     import {contexts, loadYtPlayer} from '@/store';
 
     export let chunk: {video_id: string; chunk: number; text: string; start: number};
@@ -8,7 +9,8 @@
     };
 
     const onAddTranscript = (text: string) => {
-        contexts.set($contexts.concat(text));
+        const _text = getSelectionText() || text;
+        contexts.set($contexts.concat(_text));
     };
 
     // Convert the seconds into duration format `<minutes>m<seconds>s`

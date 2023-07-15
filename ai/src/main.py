@@ -1,6 +1,7 @@
 from flask import Flask, request
 import os
 from app import (
+    app_state_svc,
     youtube_transcript_svc,
     assistant_writer_svc,
     general_knowledge_svc,
@@ -18,6 +19,38 @@ app = Flask(__name__)
 @app.get("/healthz")
 def healthz():
     return "healthy", 200
+
+
+@app.get("/app_state_list")
+def app_state_list():
+    return {
+        "app_states": [app_state.to_dict() for app_state in app_state_svc.list_all()],
+    }, 200
+
+
+@app.get("/app_state/<app_id>")
+def app_state_get(app_id: str):
+    return {"app_state": app_state_svc.get(app_id)}, 200
+
+
+@app.post("/app_state")
+def app_state_create():
+    [name, data] = request_json_require_validate(["name", "data"])
+    app_id = app_state_svc.create(name, data)
+    return {"app_id": app_id}, 200
+
+
+@app.post("/app_state/<app_id>")
+def app_state_save(app_id: str):
+    [data] = request_json_require_validate(["data"])
+    app_state_svc.save(app_id, data)
+    return "saved", 200
+
+
+@app.delete("/app_state/<app_id>")
+def app_state_delete(app_id: str):
+    app_state_svc.delete(app_id)
+    return "deleted", 200
 
 
 @app.get("/list_youtube_videos")
@@ -65,11 +98,13 @@ def youtube_transcript_similarity():
     similarity = youtube_transcript_svc.get_similarity(query, links, k=k or 5)
     return {"similarity": [s.to_dict() for s in similarity]}, 200
 
+
 @app.post("/general_knowledge_wikipedia_search")
 @with_handle_require_validate
 def general_knowledge_wikipedia_search():
     [search] = request_json_require_validate(["search"])
     return {"search_results": general_knowledge_svc.search_page(search)}, 200
+
 
 @app.post("/general_knowledge_wikipedia_page")
 @with_handle_require_validate
@@ -126,6 +161,7 @@ def assistant_chat():
     [chat] = request_json_require_validate(["chat"])
     res = assistant_writer_svc.get_chat(chat=chat)
     return {"response": res}, 200
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

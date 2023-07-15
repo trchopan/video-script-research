@@ -18,6 +18,7 @@ from app.helpers import find_element
 
 from .base_model import BaseModel, from_int, from_str, get_db, to_float
 
+
 class YoutubeVideo(BaseModel):
     video_id = CharField()
     thumbnail = CharField(max_length=1024)
@@ -109,7 +110,8 @@ class YoutubeTranscriptService:
     _puncturation_prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
-                "Below is a Script that missing punctuation. Help add in the approriate punctuations in the Output\n\n"
+                "Below is a Script that missing punctuation. "
+                "Help add in the approriate punctuations in the Output\n\n"
                 "Script:\n{script}\n\n"
             ),
             HumanMessagePromptTemplate.from_template("Text:"),
@@ -132,8 +134,8 @@ class YoutubeTranscriptService:
                     YoutubeVideo.video_id == video_id
                 )
                 return yt_video
-            except:
-                pass
+            except Exception as e:
+                print("cannot get video details", e)
 
         payload = {
             "id": video_id,

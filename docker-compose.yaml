@@ -17,8 +17,8 @@ services:
         volumes:
             - ./db-data:/var/lib/postgresql/data/
         # Only expose ports for debug
-        # ports:
-        #     - 5432:5432
+        ports:
+            - 5432:5432
         environment:
             POSTGRES_USER: root
             POSTGRES_PASSWORD: password

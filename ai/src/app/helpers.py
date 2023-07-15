@@ -1,3 +1,4 @@
+import datetime
 from functools import wraps
 
 from flask import request
@@ -46,7 +47,6 @@ def request_json_optional(fields: list[str]):
     return field_values
 
 
-
 def with_handle_require_validate(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
@@ -64,6 +64,10 @@ def find_element(array, condition):
         if condition(element):
             return element
     return None
+
+
+def get_timestamp():
+    return datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
 
 
 def send_chat_prompt_with_print(chat: ChatOpenAI, prompt: PromptValue) -> BaseMessage:

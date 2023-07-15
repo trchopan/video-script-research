@@ -2,8 +2,8 @@
     export let text: string;
 </script>
 
-<div>
-    {#each text.split('\n') as p}
+<div class="flex flex-col gap-5 leading-7">
+    {#each text.split('\n').filter(Boolean) as p}
         <p>{p}</p>
     {/each}
 </div>

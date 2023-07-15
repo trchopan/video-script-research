@@ -23,7 +23,6 @@ class VectorStore:
     def register_vector_plugin(self):
         register_vector(self.get_db())
 
-
     def execute(self, sql, args=None):
         """
         This is a simple hack to fix the issue when psycopg2 unable to handle
@@ -54,19 +53,21 @@ class VectorStore:
 
     def create_table(self):
         self.execute(
-            f"""CREATE TABLE IF NOT EXISTS {self._TABLE_NAME} (
-                    namespace VARCHAR(255),
-                    document VARCHAR(255),
-                    chunk INT,
-                    embedding vector(1536))"""
+            f"""
+            CREATE TABLE IF NOT EXISTS {self._TABLE_NAME} (
+                namespace VARCHAR(255),
+                document VARCHAR(255),
+                chunk INT,
+                embedding vector(1536)
+            )"""
         )
 
     def delete_embeddings(self, namespace: str, document: str = ""):
         query_str = f"DELETE FROM {self._TABLE_NAME} WHERE namespace = %s"
-        query_args = (namespace, )
+        query_args = (namespace,)
         if document != "":
             query_str += " AND document = %s"
-            query_args += (document, )
+            query_args += (document,)
 
         self.execute(query_str, query_args)
 
@@ -74,7 +75,8 @@ class VectorStore:
         self, namespace: str, document: str, chunk: int, embeddings: list[float]
     ):
         self.execute(
-            f"""INSERT INTO {self._TABLE_NAME} (namespace, document, chunk, embedding) VALUES (%s, %s, %s, %s)""",
+            f"INSERT INTO {self._TABLE_NAME} (namespace, document, chunk, embedding) "
+            "VALUES (%s, %s, %s, %s)",
             (
                 namespace,
                 document,
@@ -85,13 +87,13 @@ class VectorStore:
 
     def get_embeddings(self, namespace: str, document: str = "") -> list[list[float]]:
         query_str = f"SELECT embedding FROM {self._TABLE_NAME} WHERE namespace = %s"
-        query_args = (namespace, )
+        query_args = (namespace,)
 
         if document != "":
             query_str += " AND document = %s"
-            query_args += (document, )
+            query_args += (document,)
 
-        return [e for (e, ) in self.execute(query_str, query_args) or []]
+        return [e for (e,) in self.execute(query_str, query_args) or []]
 
     def similarity_search(
         self,
@@ -101,13 +103,15 @@ class VectorStore:
         limit: int = 5,
     ):
         query_str = f"""
-        SELECT namespace, document, chunk, 1 - (embedding <-> %s::vector) AS similarity FROM {self._TABLE_NAME}
+        SELECT namespace, document, chunk,
+        1 - (embedding <-> %s::vector) AS similarity
+        FROM {self._TABLE_NAME}
         WHERE namespace = %s
         """
-        query_args = (query_embedding, namespace) 
+        query_args = (query_embedding, namespace)
         if document != "":
             query_str += " AND document = %s"
-            query_args += (document, )
+            query_args += (document,)
 
         query_str += " ORDER BY embedding <-> %s::vector LIMIT %s"
         query_args += (query_embedding, limit)

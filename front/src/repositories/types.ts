@@ -5,6 +5,13 @@ export enum Tile {
     Extend = 'Extend',
 }
 
+export interface AppState {
+    app_id: string;
+    data: any;
+    name: string;
+    timestamp: string;
+}
+
 export interface YoutubeVideo {
     video_id: string;
     title: string;

@@ -1,12 +1,21 @@
 <script lang="ts">
-    import {AppRail, AppRailTile, AppShell, Modal, drawerStore} from '@skeletonlabs/skeleton';
+    import {
+        AppRail,
+        AppRailAnchor,
+        AppRailTile,
+        AppShell,
+        Drawer,
+        Modal,
+        drawerStore,
+    } from '@skeletonlabs/skeleton';
     import {onMount} from 'svelte';
     import SimilarityView from './components/SimilarityView.svelte';
-    import LeftDrawer from './components/LeftDrawer.svelte';
+    import VideosDrawer from './components/VideosDrawer.svelte';
     import {
+        currentAppId,
         currentTile,
         getVideos,
-        loadLocalStorage,
+        loadAppState,
         researchVideoIds,
         showYtPlayer,
         tileOptions,
@@ -18,48 +27,61 @@
     import {Tile} from './repositories/types';
     import YoutubeView from './components/YoutubeView.svelte';
     import GeneralKnowledgeView from './components/GeneralKnowledgeView.svelte';
+    import AppStateDrawer from './components/AppStateDrawer.svelte';
 
     onMount(async () => {
-        loadLocalStorage();
+        loadAppState();
         getVideos();
     });
-
-    const openLeftDrawer = () => {
-        drawerStore.open({id: 'left-drawer'});
-    };
+    let drawer = '';
+    drawerStore.subscribe(s => {
+        drawer = s.id;
+    });
 </script>
 
 <Modal />
-<LeftDrawer />
+<Drawer width="w-[600px]">
+    {#if drawer === 'videos-drawer'}
+        <VideosDrawer />
+    {:else if drawer === 'app-state-drawer'}
+        <AppStateDrawer />
+    {/if}
+</Drawer>
 
 <AppShell>
     <svelte:fragment slot="sidebarLeft">
         <AppRail>
             <svelte:fragment slot="lead">
-                <div />
+                <AppRailAnchor
+                    class="cursor-pointer"
+                    on:click={() => drawerStore.open({id: 'app-state-drawer'})}
+                >
+                    <span>App State</span>
+                </AppRailAnchor>
             </svelte:fragment>
-            {#each tileOptions as tile}
-                <AppRailTile
-                    bind:group={$currentTile}
-                    name={tile}
-                    value={tile}
-                    title={tile}
-                    active={tile === Tile.Extend ? 'bg-secondary-active-token' : undefined}
-                >
-                    <span>{tile}</span>
-                </AppRailTile>
-            {/each}
+            {#if $currentAppId}
+                {#each tileOptions as tile}
+                    <AppRailTile
+                        bind:group={$currentTile}
+                        name={tile}
+                        value={tile}
+                        title={tile}
+                        active={tile === Tile.Extend ? 'bg-secondary-active-token' : undefined}
+                    >
+                        <span>{tile}</span>
+                    </AppRailTile>
+                {/each}
+            {/if}
             <svelte:fragment slot="trail">
-                <AppRailTile
-                    active="select-videos"
-                    group="select-videos"
-                    name="select-videos"
-                    value="select-video"
-                    title="Videos"
-                    on:click={() => openLeftDrawer()}
-                >
-                    <span>Videos</span>
-                </AppRailTile>
+                {#if $currentAppId}
+                    <AppRailAnchor
+                        class="cursor-pointer"
+                        on:click={() => drawerStore.open({id: 'videos-drawer'})}
+                    >
+                        <span>Videos</span>
+                        <span>App State</span>
+                    </AppRailAnchor>
+                {/if}
             </svelte:fragment>
         </AppRail>
     </svelte:fragment>
