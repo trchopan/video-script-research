@@ -2,6 +2,6 @@
 .vscode
 service-account.json
 secret.yaml
-.env.local
+.env
 
 db-data

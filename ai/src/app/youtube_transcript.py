@@ -1,4 +1,5 @@
 from datetime import datetime
+from multiprocessing.pool import ThreadPool as Pool
 import requests
 from typing import List, Tuple
 from urllib.parse import parse_qs, urlparse
@@ -235,24 +236,34 @@ class YoutubeTranscriptService:
                 found.get("start", 0.0) if found is not None else 0.0
             )
 
-        results: list[Tuple[str, list[float]]] = []
-        for i, text in enumerate(splitted_texts):
+        def _process_puncturation(video_id: str, index: int, total: int, text: str):
             print(
                 f">>> processing {self._EMBEDDING_NAMESPACE} {video_id}: "
-                f"{i + 1}/{len(splitted_texts)}"
+                f"{index + 1}/{total}"
             )
             prompt = self._puncturation_prompt.format_prompt(script=text)
             result = self.chat(prompt.to_messages())
             embeddings = self.embeddings.embed_query(result.content)
-            results.append((result.content, embeddings))
+            return index, result.content, embeddings
+
+        results: list[Tuple[int, str, list[float]]] = []
+        with Pool(processes=5) as pool:
+            workers = [
+                pool.apply_async(
+                    _process_puncturation,
+                    (video_id, i, len(splitted_texts), text),
+                )
+                for i, text in enumerate(splitted_texts)
+            ]
+            for res in workers:
+                index, content, embeddings = res.get()
+                results.append((index, content, embeddings))
 
         transcripts = []
-        for i, [(content, embeddings), start] in enumerate(
-            zip(results, transcript_starts)
-        ):
+        for [(index, content, embeddings), start] in zip(results, transcript_starts):
             transcript = YoutubeTranscript(
                 video_id=video_id,
-                chunk=i,
+                chunk=index,
                 start=start,
                 text=content,
             )
@@ -261,7 +272,7 @@ class YoutubeTranscriptService:
             self.vector_store.insert_embeddings(
                 namespace=self._EMBEDDING_NAMESPACE,
                 document=video_id,
-                chunk=i,
+                chunk=index,
                 embeddings=embeddings,
             )
 

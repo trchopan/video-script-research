@@ -8,7 +8,6 @@ services:
         ports:
             - '6969:8080'
         command: "tail -f /dev/null"
-        # command: "sh run.sh"
         environment:
             PORT: '8080'
 
@@ -16,7 +15,6 @@ services:
         image: 'ankane/pgvector'
         volumes:
             - ./db-data:/var/lib/postgresql/data/
-        # Only expose ports for debug
         ports:
             - 5432:5432
         environment:
