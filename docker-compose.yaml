@@ -1,10 +1,11 @@
 version: '3'
 services:
-    internal:
+    ai:
         build: ai
         volumes:
             - ./ai:/app
             - ./ai/service-account.json:/etc/secrets/gcloud/service-account.json
+            - ./static:/static
         ports:
             - '6969:8080'
         command: "tail -f /dev/null"

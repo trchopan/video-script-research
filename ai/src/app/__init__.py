@@ -3,13 +3,13 @@ from dotenv import load_dotenv
 from google.cloud import speech
 from langchain.chat_models import ChatOpenAI
 from langchain.embeddings.openai import OpenAIEmbeddings
-from app.app_state import AppStateService
-from app.assistant_writer import AssistantWriterService
-from app.speech_to_text import SpeechToTextService
+from .app_state import AppStateService
+from .assistant_writer import AssistantWriterService
+from .speech_to_text import SpeechToTextService
 
-from app.vector_store import VectorStore
-from app.general_knowledge import GeneralKnowledgeService
-from app.youtube_transcript import YoutubeTranscriptService
+from .vector_store import VectorStore
+from .general_knowledge import GeneralKnowledgeService
+from .youtube_transcript import YoutubeTranscriptService
 from .base_model import get_db
 
 load_dotenv()
