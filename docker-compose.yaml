@@ -4,12 +4,13 @@ services:
         build: ai
         volumes:
             - ./ai:/app
-            - ./secret.yaml:/etc/secrets/gcloud/secret.yaml
+            - ./ai/service-account.json:/etc/secrets/gcloud/service-account.json
         ports:
             - '6969:8080'
         command: "tail -f /dev/null"
         environment:
-            PORT: '8080'
+            - PORT=8080
+            - GOOGLE_APPLICATION_CREDENTIALS=/etc/secrets/gcloud/service-account.json
 
     database:
         image: 'ankane/pgvector'

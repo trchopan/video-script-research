@@ -3,5 +3,6 @@
 service-account.json
 secret.yaml
 .env
+service-account.json
 
 db-data

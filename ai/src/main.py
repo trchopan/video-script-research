@@ -5,6 +5,7 @@ from app import (
     youtube_transcript_svc,
     assistant_writer_svc,
     general_knowledge_svc,
+    speech_to_text_svc,
 )
 
 from app.helpers import (
@@ -161,6 +162,17 @@ def assistant_chat():
     [chat] = request_json_require_validate(["chat"])
     res = assistant_writer_svc.get_chat(chat=chat)
     return {"response": res}, 200
+
+
+@app.post("/speech")
+def speech():
+    file = request.files.get("file")
+    if file is None:
+        return "bad request must have file", 400
+
+    file_bytes = file.read()
+    transcript = speech_to_text_svc.get_transcript(file_bytes)
+    return {"transcript": transcript}, 200
 
 
 if __name__ == "__main__":

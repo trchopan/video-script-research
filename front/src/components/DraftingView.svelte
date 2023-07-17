@@ -1,7 +1,7 @@
 <script lang="ts">
-    import {content, contexts} from '@/store';
+    import {content, contexts, mediaRecorder} from '@/store';
     import Loading from './Loading.svelte';
-    import {AssistantRepo} from '@/repositories/inject';
+    import {AssistantRepo, SpeechRepo} from '@/repositories/inject';
 
     let loading = false;
     const partialTool = async (fn: () => Promise<string>) => {
@@ -24,6 +24,38 @@
 
     const onChat = async () => {
         partialTool(() => AssistantRepo.chat($content));
+    };
+
+    let chunks = [];
+    let isRecording = false;
+
+    const onRecord = async () => {
+        if (!$mediaRecorder) return;
+        isRecording = true;
+        $mediaRecorder.start();
+        console.log($mediaRecorder.state);
+        console.log('recorder started');
+        $mediaRecorder.ondataavailable = e => {
+            chunks.push(e.data);
+        };
+    };
+
+    let audioRef;
+    const onStopRecord = async () => {
+        //
+        isRecording = false;
+        $mediaRecorder.stop();
+        $mediaRecorder.onstop = async e => {
+            console.log($mediaRecorder.state);
+            console.log('recorder stopped');
+            console.log('>>>', chunks);
+            const blob = new Blob(chunks, {type: 'audio/ogg; codecs=opus'});
+            const audioURL = window.URL.createObjectURL(blob);
+            audioRef.src = audioURL;
+            const transcriptResp = await SpeechRepo.transcript(blob);
+            content.set($content + '\n---\n' + transcriptResp);
+            chunks = [];
+        };
     };
 </script>
 
@@ -56,6 +88,24 @@
             >
                 Chat
             </button>
+            <audio bind:this={audioRef} />
+            {#if !isRecording}
+                <button
+                    type="button"
+                    class="btn variant-ringed-primary btn-sm"
+                    on:click={() => onRecord()}
+                >
+                    Record
+                </button>
+            {:else}
+                <button
+                    type="button"
+                    class="btn variant-ringed-error btn-sm"
+                    on:click={() => onStopRecord()}
+                >
+                    Stop
+                </button>
+            {/if}
         </Loading>
     </div>
 </div>

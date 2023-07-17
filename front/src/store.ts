@@ -62,10 +62,13 @@ const loadList: LoadList = {
 export const saveAppState = () => {
     const app_id = get(currentAppId);
     if (!app_id) return;
-    const newData = Object.entries(loadList).reduce((acc, [k, v]) => {
-        acc[k] = get(v.val);
-        return acc;
-    }, {} as {[key: string]: StringOrStringArray});
+    const newData = Object.entries(loadList).reduce(
+        (acc, [k, v]) => {
+            acc[k] = get(v.val);
+            return acc;
+        },
+        {} as {[key: string]: StringOrStringArray}
+    );
     AppStateRepo.save(app_id, newData);
 };
 
@@ -137,4 +140,23 @@ export const showYtPlayer = () => {
 export const hideYtPlayer = () => {
     ytPlayer.pauseVideo();
     ytVideoShow.set(false);
+};
+
+export const mediaRecorder = writable<MediaRecorder | null>(null);
+
+export const speechToText = async () => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        console.log('getUserMedia supported.');
+        const stream = await navigator.mediaDevices
+            .getUserMedia({
+                audio: true,
+            })
+            .catch(err => {
+                console.error(`The following getUserMedia error occurred: ${err}`);
+            }) as MediaStream;
+        mediaRecorder.set(new MediaRecorder(stream));
+    } else {
+        console.log('getUserMedia not supported on your browser!');
+    }
+
 };

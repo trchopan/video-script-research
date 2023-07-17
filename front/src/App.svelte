@@ -18,6 +18,7 @@
         loadAppState,
         researchVideoIds,
         showYtPlayer,
+        speechToText,
         tileOptions,
         ytVideoShow,
     } from '@/store';
@@ -32,6 +33,7 @@
     onMount(async () => {
         loadAppState();
         getVideos();
+        speechToText();
     });
     let drawer = '';
     drawerStore.subscribe(s => {

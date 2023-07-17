@@ -11,3 +11,4 @@ psycopg2-binary==2.9.6
 pgvector==0.1.8
 youtube-transcript-api==0.6.1
 wikipedia==1.4.0
+google-cloud-speech==2.21.0
