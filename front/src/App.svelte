@@ -79,7 +79,6 @@
                         on:click={() => drawerStore.open({id: 'videos-drawer'})}
                     >
                         <span>Videos</span>
-                        <span>App State</span>
                     </AppRailAnchor>
                 {/if}
             </svelte:fragment>
