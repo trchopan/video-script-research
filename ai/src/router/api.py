@@ -37,14 +37,23 @@ def app_state_create(body: AppStateCreate):
     return {"app_id": app_id}
 
 
-class AppStateSave(BaseModel):
-    name: str
+class AppStateUpdateData(BaseModel):
     data: dict
 
 
 @router.post("/app_state/{app_id}")
-def app_state_save(app_id: str, body: AppStateSave):
-    app_state_svc.save(app_id, name=body.name, data=body.data)
+def app_state_update_data(app_id: str, body: AppStateUpdateData):
+    app_state_svc.update_data(app_id, data=body.data)
+    return "saved"
+
+
+class AppStateUpdateName(BaseModel):
+    name: str
+
+
+@router.post("/app_state/{app_id}")
+def app_state_update_name(app_id: str, body: AppStateUpdateName):
+    app_state_svc.update_name(app_id, name=body.name)
     return "saved"
 
 

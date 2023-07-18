@@ -40,11 +40,15 @@ class AppStateService:
         app_state.save()
         return app_id
 
-    def save(self, app_id: str, name: str, data: dict):
-        app_state = AppState.get(AppState.app_id == app_id)
-        app_state.name = name
-        app_state.data = json.dumps(data)
-        app_state.save()
+    def update_name(self, app_id: str, name: str):
+        appstate = AppState.get(AppState.app_id == app_id)
+        appstate.name = name
+        appstate.save()
+
+    def update_data(self, app_id: str, data: dict):
+        appstate = AppState.get(AppState.app_id == app_id)
+        appstate.data = json.dumps(data)
+        appstate.save()
 
     def delete(self, app_id: str):
         AppState.get(AppState.app_id == app_id).delete_instance()
