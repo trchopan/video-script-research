@@ -83,7 +83,7 @@
                     class="btn variant-ringed-primary btn-sm"
                     on:click={() => onRecord()}
                 >
-                    Record
+                    Speak
                 </button>
                 {#if audioRef?.src.length > 0}
                     <button

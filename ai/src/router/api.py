@@ -38,12 +38,13 @@ def app_state_create(body: AppStateCreate):
 
 
 class AppStateSave(BaseModel):
+    name: str
     data: dict
 
 
 @router.post("/app_state/{app_id}")
 def app_state_save(app_id: str, body: AppStateSave):
-    app_state_svc.save(app_id, body.data)
+    app_state_svc.save(app_id, name=body.name, data=body.data)
     return "saved"
 
 
@@ -63,7 +64,7 @@ class YoutubeVideo(BaseModel):
 
 
 @router.post("/youtube_video")
-def youtube_video(body: YoutubeVideo, clear_cache: bool=False):
+def youtube_video(body: YoutubeVideo, clear_cache: bool = False):
     youtube_video = youtube_transcript_svc.get_video_details(
         body.link, clear_cache=clear_cache
     )

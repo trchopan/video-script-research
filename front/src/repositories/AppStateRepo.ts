@@ -18,8 +18,8 @@ export class _AppStateRepo {
         return data.app_state as AppState;
     }
 
-    async save(app_id: string, data: object) {
-        await this.api.post(`/app_state/${app_id}`, {data});
+    async save(app_id: string, name: string, data: object) {
+        await this.api.post(`/app_state/${app_id}`, {name, data});
     }
 
     async delte(app_id: string) {

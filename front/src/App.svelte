@@ -54,7 +54,6 @@
             <svelte:fragment slot="lead">
                 <AppRailAnchor
                     class="cursor-pointer"
-                    active="bg-pink-300"
                     on:click={() => drawerStore.open({id: 'app-state-drawer'})}
                 >
                     <span>App State</span>

@@ -9,26 +9,39 @@
     let name: string = '';
     let appStates: AppState[] = [];
 
+    const loadAppStates = async () => {
+        appStates = await AppStateRepo.list();
+    };
+
     const onCreateAppState = async () => {
         await AppStateRepo.create(name, {});
-        await onLoadAppStates();
+        await loadAppStates();
     };
 
     const onSelectAppState = async (app_id: string) => {
         currentAppId.set(app_id);
     };
 
-    const onLoadAppStates = async () => {
-        appStates = await AppStateRepo.list();
-    };
-
     const onDeleteAppState = async (app_id: string) => {
         await AppStateRepo.delte(app_id);
-        await onLoadAppStates();
+        await loadAppStates();
+    };
+
+    let editingAppId = '';
+    let editName = '';
+    const onEdit = (app_id: string, appState: AppState) => {
+        editingAppId = app_id;
+        editName = appState.name;
+    };
+    const onSave = async (app_id: string, appState: AppState) => {
+        await AppStateRepo.save(app_id, editName, appState.data);
+        editName = '';
+        editingAppId = '';
+        loadAppStates()
     };
 
     onMount(() => {
-        onLoadAppStates();
+        loadAppStates();
     });
 </script>
 
@@ -48,10 +61,36 @@
                 class="px-3 flex place-content-between items-center"
                 on:click={() => onSelectAppState(appState.app_id)}
             >
-                <div class="cursor-pointer" class:selected={$currentAppId === appState.app_id}>
-                    {appState.name || '<Empty Name>'}
-                </div>
-                <div>
+                {#if editingAppId === appState.app_id}
+                    <input
+                        bind:value={editName}
+                        class="input"
+                        type="text"
+                        placeholder={appState.name}
+                    />
+                {:else}
+                    <div class="cursor-pointer" class:selected={$currentAppId === appState.app_id}>
+                        {appState.name || '<Empty Name>'}
+                    </div>
+                {/if}
+                <div class="flex gap-3">
+                    {#if editingAppId === appState.app_id}
+                        <button
+                            type="button"
+                            class="btn-icon btn-icon-sm"
+                            on:click={() => onSave(appState.app_id, appState)}
+                        >
+                            <span class="text-sm material-icons">save</span>
+                        </button>
+                    {:else}
+                        <button
+                            type="button"
+                            class="btn-icon btn-icon-sm"
+                            on:click={() => onEdit(appState.app_id, appState)}
+                        >
+                            <span class="text-sm material-icons">edit</span>
+                        </button>
+                    {/if}
                     <button
                         type="button"
                         class="btn-icon btn-icon-sm"

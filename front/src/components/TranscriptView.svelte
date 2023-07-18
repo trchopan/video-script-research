@@ -15,7 +15,7 @@
 </script>
 
 <div class="flex flex-col gap-5">
-    <ul class="list h-[20vh] overflow-y-scroll">
+    <ul class="list h-[12rem] overflow-y-scroll">
         {#each localVideos as video}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <li class:selected={$selectedVideoId === video.video_id}>
@@ -41,7 +41,7 @@
 
     <hr />
 
-    <div class="h-[70vh] overflow-y-scroll">
+    <div class="overflow-y-scroll" style="height: calc(100vh - 17rem)">
         {#each $transcripts as transcript}
             <div class="pb-8 flex flex-col gap-3">
                 <ChunkInfo chunk={{video_id: $selectedVideoId, ...transcript}} />

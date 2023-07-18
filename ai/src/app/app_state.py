@@ -40,8 +40,9 @@ class AppStateService:
         app_state.save()
         return app_id
 
-    def save(self, app_id: str, data: dict):
+    def save(self, app_id: str, name: str, data: dict):
         app_state = AppState.get(AppState.app_id == app_id)
+        app_state.name = name
         app_state.data = json.dumps(data)
         app_state.save()
 
@@ -49,7 +50,9 @@ class AppStateService:
         AppState.get(AppState.app_id == app_id).delete_instance()
 
     def list_all(self):
-        app_states: list[AppState] = list(AppState.select())
+        app_states: list[AppState] = list(
+            AppState.select().order_by(AppState.timestamp)
+        )
         return app_states
 
 
