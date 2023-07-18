@@ -125,7 +125,7 @@ export const initYtPlayer = () => {
     // For debug
     // (window as any).ytPlayer = ytPlayer
 };
-export const loadYtPlayer = (video_id: string, start: number) => {
+export const playYtPlayer = (video_id: string, start: number) => {
     if (ytPlayer.getVideoData().video_id === video_id) {
         ytPlayer.seekTo(start);
     } else {

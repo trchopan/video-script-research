@@ -1,11 +1,11 @@
 <script lang="ts">
     import {getSelectionText} from '@/helpers';
-    import {contexts, loadYtPlayer} from '@/store';
+    import {contexts, playYtPlayer} from '@/store';
 
     export let chunk: {video_id: string; chunk: number; text: string; start: number};
 
     const onPlayYtVideo = (video_id: string, start: number) => {
-        loadYtPlayer(video_id, start);
+        playYtPlayer(video_id, start);
     };
 
     const onAddTranscript = (text: string) => {
