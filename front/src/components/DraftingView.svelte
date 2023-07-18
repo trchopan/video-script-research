@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {content, contexts, mediaRecorder} from '@/store';
+    import {content, contexts, mediaRecorderSvc} from '@/store';
     import Loading from './Loading.svelte';
     import {AssistantRepo, SpeechRepo} from '@/repositories/inject';
 
@@ -26,36 +26,25 @@
         partialTool(() => AssistantRepo.chat($content));
     };
 
-    let chunks = [];
     let isRecording = false;
+    let stopRecording: () => Promise<Blob[]>;
 
     const onRecord = async () => {
-        if (!$mediaRecorder) return;
         isRecording = true;
-        $mediaRecorder.start();
-        console.log($mediaRecorder.state);
-        console.log('recorder started');
-        $mediaRecorder.ondataavailable = e => {
-            chunks.push(e.data);
-        };
+        stopRecording = await mediaRecorderSvc.startRecord();
     };
 
-    let audioRef;
+    let audioRef: any;
     const onStopRecord = async () => {
-        //
         isRecording = false;
-        $mediaRecorder.stop();
-        $mediaRecorder.onstop = async e => {
-            console.log($mediaRecorder.state);
-            console.log('recorder stopped');
-            console.log('>>>', chunks);
-            const blob = new Blob(chunks, {type: 'audio/ogg; codecs=opus'});
-            const audioURL = window.URL.createObjectURL(blob);
-            audioRef.src = audioURL;
-            const transcriptResp = await SpeechRepo.transcript(blob);
-            content.set($content + '\n---\n' + transcriptResp);
-            chunks = [];
-        };
+        if (!stopRecording) return;
+        const chunks = await stopRecording();
+        const blob = new Blob(chunks, {type: 'audio/ogg; codecs=opus'});
+        const audioURL = window.URL.createObjectURL(blob);
+        audioRef.src = audioURL;
+        console.log('>>src', audioRef.src);
+        const transcriptResp = await SpeechRepo.transcript(blob);
+        content.set($content + '\n---\n' + transcriptResp);
     };
 </script>
 
@@ -88,7 +77,6 @@
             >
                 Chat
             </button>
-            <audio bind:this={audioRef} />
             {#if !isRecording}
                 <button
                     type="button"
@@ -97,6 +85,15 @@
                 >
                     Record
                 </button>
+                {#if audioRef?.src.length > 0}
+                    <button
+                        type="button"
+                        class="btn-icon btn-icon-sm"
+                        on:click={() => audioRef.play()}
+                    >
+                        <span class="text-sm material-icons">play_circle_filled</span>
+                    </button>
+                {/if}
             {:else}
                 <button
                     type="button"
@@ -106,6 +103,7 @@
                     Stop
                 </button>
             {/if}
+            <audio bind:this={audioRef} />
         </Loading>
     </div>
 </div>

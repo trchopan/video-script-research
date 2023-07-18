@@ -18,7 +18,6 @@
         loadAppState,
         researchVideoIds,
         showYtPlayer,
-        speechToText,
         tileOptions,
         ytVideoShow,
     } from '@/store';
@@ -33,7 +32,6 @@
     onMount(async () => {
         loadAppState();
         getVideos();
-        speechToText();
     });
     let drawer = '';
     drawerStore.subscribe(s => {
@@ -56,6 +54,7 @@
             <svelte:fragment slot="lead">
                 <AppRailAnchor
                     class="cursor-pointer"
+                    active="bg-pink-300"
                     on:click={() => drawerStore.open({id: 'app-state-drawer'})}
                 >
                     <span>App State</span>

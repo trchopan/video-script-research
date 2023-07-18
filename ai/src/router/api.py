@@ -63,7 +63,7 @@ class YoutubeVideo(BaseModel):
 
 
 @router.post("/youtube_video")
-def youtube_video(clear_cache: bool, body: YoutubeVideo):
+def youtube_video(body: YoutubeVideo, clear_cache: bool=False):
     youtube_video = youtube_transcript_svc.get_video_details(
         body.link, clear_cache=clear_cache
     )
@@ -75,7 +75,7 @@ class GetYoutubeTranscript(BaseModel):
 
 
 @router.post("/get_youtube_transcript")
-def get_youtube_transcript(clear_cache: bool, body: GetYoutubeTranscript):
+def get_youtube_transcript(body: GetYoutubeTranscript, clear_cache: bool = False):
     transcripts = youtube_transcript_svc.get_parsed_transcript(
         body.link, clear_cache=clear_cache
     )
@@ -97,11 +97,12 @@ def get_youtube_transcript_embedding(body: GetYoutubeTranscriptEmbedding):
 class YoutubeTranscriptSimilarity(BaseModel):
     links: List[str]
     query: str
+    k: int = 10
 
 
 @router.post("/youtube_transcript_similarity")
-def youtube_transcript_similarity(k: bool, body: YoutubeTranscriptSimilarity):
-    similarity = youtube_transcript_svc.get_similarity(body.query, body.links, k=k or 5)
+def youtube_transcript_similarity(body: YoutubeTranscriptSimilarity):
+    similarity = youtube_transcript_svc.get_similarity(body.query, body.links, k=body.k)
     return {"similarity": [s.to_dict() for s in similarity]}
 
 
@@ -186,7 +187,15 @@ def assistant_chat(body: AssistantChat):
     return {"response": res}
 
 
-@router.post("/speech")
-def speech(file: Annotated[bytes, File()]):
-    transcript = speech_to_text_svc.get_transcript(file)
+@router.post("/speech_to_text")
+def speech_to_text(
+    file: Annotated[
+        bytes,
+        File(
+            title="SpeedAudioFile",
+            description="Should be in bytes blob",
+        ),
+    ]
+):
+    transcript = speech_to_text_svc.get_transcript_whisper(file)
     return {"transcript": transcript}

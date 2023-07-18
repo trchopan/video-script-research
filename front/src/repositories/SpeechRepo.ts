@@ -6,7 +6,7 @@ export class _SpeechRepo {
     async transcript(blob: Blob) {
         const formData = new FormData();
         formData.append('file', blob);
-        const {data} = await this.api.post('/speech', formData);
+        const {data} = await this.api.post('/speech_to_text', formData);
         return data.transcript as string;
     }
 }

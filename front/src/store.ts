@@ -7,6 +7,7 @@ import {
 } from '@/repositories/types';
 import {AppStateRepo, YoutubeRepo} from './repositories/inject';
 import {debounce, isEmpty} from 'lodash';
+import { MediaRecorderService } from './services/mediaRecorder';
 
 export const openTranscript = writable(false);
 
@@ -53,8 +54,6 @@ interface LoadList {
 }
 const loadList: LoadList = {
     researchVideoIds: {val: researchVideoIds, default: []},
-    // wikipediaSearchString: {val: wikipediaSearchString, default: ''},
-    // wikipediaSearchResult: {val: wikipediaSearchResult, default: ''},
     content: {val: content, default: ''},
     contexts: {val: contexts, default: []},
 };
@@ -142,21 +141,4 @@ export const hideYtPlayer = () => {
     ytVideoShow.set(false);
 };
 
-export const mediaRecorder = writable<MediaRecorder | null>(null);
-
-export const speechToText = async () => {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        console.log('getUserMedia supported.');
-        const stream = await navigator.mediaDevices
-            .getUserMedia({
-                audio: true,
-            })
-            .catch(err => {
-                console.error(`The following getUserMedia error occurred: ${err}`);
-            }) as MediaStream;
-        mediaRecorder.set(new MediaRecorder(stream));
-    } else {
-        console.log('getUserMedia not supported on your browser!');
-    }
-
-};
+export const mediaRecorderSvc = new MediaRecorderService()
