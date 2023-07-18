@@ -58,6 +58,9 @@ const loadList: LoadList = {
     contexts: {val: contexts, default: []},
 };
 
+export const currentAppId = writable<string>(window.localStorage.getItem('app_id') || '');
+let currentAppName = '';
+
 export const saveAppState = () => {
     const app_id = get(currentAppId);
     if (!app_id) return;
@@ -68,7 +71,7 @@ export const saveAppState = () => {
         },
         {} as {[key: string]: StringOrStringArray}
     );
-    AppStateRepo.save(app_id, newData);
+    AppStateRepo.save(app_id, currentAppName, newData);
 };
 
 export const loadAppState = async () => {
@@ -76,6 +79,7 @@ export const loadAppState = async () => {
     if (!app_id) return;
 
     const appState = await AppStateRepo.get(app_id);
+    currentAppName = appState.name;
 
     for (const [key, value] of Object.entries(loadList)) {
         try {
@@ -102,7 +106,6 @@ const initAppState = async () => {
 };
 initAppState();
 
-export const currentAppId = writable<string>(window.localStorage.getItem('app_id') || '');
 currentAppId.subscribe(app_id => {
     window.localStorage.setItem('app_id', app_id);
     loadAppState();
@@ -141,4 +144,4 @@ export const hideYtPlayer = () => {
     ytVideoShow.set(false);
 };
 
-export const mediaRecorderSvc = new MediaRecorderService()
+export const mediaRecorderSvc = new MediaRecorderService();
