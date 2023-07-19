@@ -1,5 +1,5 @@
 from datetime import datetime
-from multiprocessing.pool import ThreadPool as Pool
+from multiprocessing.pool import ThreadPool
 import requests
 from typing import List, Tuple
 from urllib.parse import parse_qs, urlparse
@@ -138,6 +138,8 @@ class YoutubeTranscriptService:
             except Exception as e:
                 print("cannot get video details", e)
 
+        # Start processing new video
+
         payload = {
             "id": video_id,
             "part": "contentDetails,snippet",
@@ -163,6 +165,7 @@ class YoutubeTranscriptService:
             publish_at=publish_at,
         )
         yt_video.save()
+
         return yt_video
 
     def get_parsed_transcript(
@@ -190,11 +193,18 @@ class YoutubeTranscriptService:
             if transcripts is not None and len(transcripts) > 0:
                 return transcripts
 
+        # Start processing new transcript
+
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=self._CHUNK_SIZE,
             chunk_overlap=self._CHUNK_OVERLAP,
         )
+
         youtube_transcripts_: list[dict] = YouTubeTranscriptApi.get_transcript(video_id)
+
+        # The following is a bit complicated
+        # I'm trying to find out the chunk and the `start` time of that chunk by
+        # checking if the transcript_has_text. It use first 20 characters to confirm it.
         youtube_transcripts: list[dict] = []
         for i, t in enumerate(youtube_transcripts_):
             if i % 3 == 0:
@@ -236,6 +246,8 @@ class YoutubeTranscriptService:
                 found.get("start", 0.0) if found is not None else 0.0
             )
 
+        # Start processing the functuation format in a ThreadPool
+
         def _process_puncturation(video_id: str, index: int, total: int, text: str):
             print(
                 f">>> processing {self._EMBEDDING_NAMESPACE} {video_id}: "
@@ -247,7 +259,7 @@ class YoutubeTranscriptService:
             return index, result.content, embeddings
 
         results: list[Tuple[int, str, list[float]]] = []
-        with Pool(processes=5) as pool:
+        with ThreadPool(processes=5) as pool:
             workers = [
                 pool.apply_async(
                     _process_puncturation,
@@ -258,6 +270,8 @@ class YoutubeTranscriptService:
             for res in workers:
                 index, content, embeddings = res.get()
                 results.append((index, content, embeddings))
+
+        # Put the result transcripts into vector store
 
         transcripts = []
         for [(index, content, embeddings), start] in zip(results, transcript_starts):
