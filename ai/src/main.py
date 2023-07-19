@@ -12,4 +12,4 @@ async def healthz():
     return "healthy"
 
 
-app.mount("/", StaticFiles(directory="/static"), name="static")
+app.mount("/", StaticFiles(directory="/static", html=True), name="static")
