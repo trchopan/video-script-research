@@ -59,7 +59,6 @@ const loadList: LoadList = {
 };
 
 export const currentAppId = writable<string>(window.localStorage.getItem('app_id') || '');
-let currentAppName = '';
 
 export const saveAppState = () => {
     const app_id = get(currentAppId);
@@ -71,7 +70,7 @@ export const saveAppState = () => {
         },
         {} as {[key: string]: StringOrStringArray}
     );
-    AppStateRepo.save(app_id, currentAppName, newData);
+    AppStateRepo.saveData(app_id, newData);
 };
 
 export const loadAppState = async () => {
@@ -79,7 +78,6 @@ export const loadAppState = async () => {
     if (!app_id) return;
 
     const appState = await AppStateRepo.get(app_id);
-    currentAppName = appState.name;
 
     for (const [key, value] of Object.entries(loadList)) {
         try {

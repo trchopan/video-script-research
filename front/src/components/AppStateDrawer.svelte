@@ -33,11 +33,11 @@
         editingAppId = app_id;
         editName = appState.name;
     };
-    const onSave = async (app_id: string, appState: AppState) => {
-        await AppStateRepo.save(app_id, editName, appState.data);
+    const onSave = async (app_id: string) => {
+        await AppStateRepo.saveName(app_id, editName);
         editName = '';
         editingAppId = '';
-        loadAppStates()
+        loadAppStates();
     };
 
     onMount(() => {
@@ -78,7 +78,7 @@
                         <button
                             type="button"
                             class="btn-icon btn-icon-sm"
-                            on:click={() => onSave(appState.app_id, appState)}
+                            on:click={() => onSave(appState.app_id)}
                         >
                             <span class="text-sm material-icons">save</span>
                         </button>
