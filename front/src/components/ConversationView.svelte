@@ -68,11 +68,8 @@
         );
     };
 
-    const onSelectTemplate = async (template: any) => {
-        selectedConversation = await ConversationRepo.saveSystemPrompt(
-            selectedConversation.conversation_id,
-            template.template
-        );
+    const onSelectTemplate = async (template: string) => {
+        localSystemPrompt = template;
     };
 
     interface ToolOption {
@@ -205,7 +202,7 @@
                             <button
                                 type="button"
                                 class="btn btn-sm variant-ringed-primary"
-                                on:click={() => onSelectTemplate(template)}
+                                on:click={() => onSelectTemplate(template.template)}
                             >
                                 {template.name}
                             </button>
