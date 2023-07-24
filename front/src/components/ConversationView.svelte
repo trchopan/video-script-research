@@ -121,7 +121,7 @@
     };
 </script>
 
-<div class="grid grid-cols-[1fr,1fr] gap-5 h-[95vh] overflow-y-hidden">
+<div class="grid grid-cols-[1fr,1.5fr] gap-5 h-[95vh] overflow-y-hidden">
     <div class="flex flex-col gap-5 overflow-y-scroll">
         <Loading loading={loadingName}>
             <div class="flex gap-5 items-center">
@@ -183,7 +183,13 @@
                     rows="3"
                     placeholder="New Chat"
                 />
-                <button on:click={() => onChat()} class="btn variant-filled-primary"> Chat </button>
+                <button
+                    on:click={() => onChat()}
+                    class="btn variant-filled-primary"
+                    disabled={loadingChat}
+                >
+                    Chat
+                </button>
             </div>
         {/if}
     </div>
