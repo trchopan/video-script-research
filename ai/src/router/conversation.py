@@ -1,13 +1,16 @@
+from enum import Enum
+from typing import Optional
 from fastapi import APIRouter
 from pydantic import BaseModel
 from app import conversation_svc
+from app.conversation import ConversationChatToolData, ConversationChatToolEnum
 
 
 conversation_router = APIRouter()
 
 
-@conversation_router.get("/conversation_template")
-def conversation_template():
+@conversation_router.get("/conversation_templates")
+def conversation_templates():
     return {"templates": conversation_svc.get_templates()}
 
 
@@ -47,21 +50,34 @@ def conversation_update_name(conversation_id: str, body: ConversationUpdateName)
     return {"conversation": result.to_dict()}
 
 
-class ConversationUpdateData(BaseModel):
-    data: list[dict]
+class ConversationUpdateSystemPrompt(BaseModel):
+    system_prompt: str
 
 
-@conversation_router.post("/conversation/{conversation_id}/data")
-def conversation_update_data(conversation_id: str, body: ConversationUpdateData):
-    result = conversation_svc.update_data(conversation_id, body.data)
+@conversation_router.post("/conversation/{conversation_id}/system_prompt")
+def conversation_update_system_prompt(
+    conversation_id: str, body: ConversationUpdateSystemPrompt
+):
+    result = conversation_svc.update_system_prompt(conversation_id, body.system_prompt)
+    return {"conversation": result.to_dict()}
+
+
+class ConversationUpdateMemory(BaseModel):
+    memory: list[dict]
+
+
+@conversation_router.post("/conversation/{conversation_id}/memory")
+def conversation_update_memory(conversation_id: str, body: ConversationUpdateMemory):
+    result = conversation_svc.update_memory(conversation_id, body.memory)
     return {"conversation": result.to_dict()}
 
 
 class ConversationChat(BaseModel):
     chat: str
+    tools: dict[ConversationChatToolEnum, ConversationChatToolData]
 
 
 @conversation_router.post("/conversation/{conversation_id}/chat")
 def conversation_chat(conversation_id: str, body: ConversationChat):
-    result = conversation_svc.new_chat(conversation_id, body.chat)
-    return {"result": result}
+    result = conversation_svc.new_chat(conversation_id, body.chat, body.tools)
+    return {"conversation": result.to_dict()}

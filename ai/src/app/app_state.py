@@ -2,11 +2,11 @@ import json
 from uuid import uuid4
 from peewee import CharField, DateTimeField, TextField
 
-from app.base_model import BaseModel, get_db
+from app.base_model import BaseDBModel, get_db
 from app.helpers import get_timestamp
 
 
-class AppState(BaseModel):
+class AppState(BaseDBModel):
     app_id = CharField()
     name = CharField()
     timestamp = DateTimeField()

@@ -23,11 +23,12 @@
     } from '@/store';
     import TranscriptView from './components/TranscriptView.svelte';
     import ScratchpadView from './components/ScratchpadView.svelte';
-    import DraftingView from './components/DraftingView.svelte';
+    import WriteScriptView from './components/WriteScriptView.svelte';
     import {Tile} from './repositories/types';
     import YoutubeView from './components/YoutubeView.svelte';
     import GeneralKnowledgeView from './components/GeneralKnowledgeView.svelte';
     import AppStateDrawer from './components/AppStateDrawer.svelte';
+    import ConversationView from './components/ConversationView.svelte';
 
     onMount(async () => {
         loadAppState();
@@ -61,13 +62,7 @@
             </svelte:fragment>
             {#if $currentAppId}
                 {#each tileOptions as tile}
-                    <AppRailTile
-                        bind:group={$currentTile}
-                        name={tile}
-                        value={tile}
-                        title={tile}
-                        active={tile === Tile.Extend ? 'bg-secondary-active-token' : undefined}
-                    >
+                    <AppRailTile bind:group={$currentTile} name={tile} value={tile} title={tile}>
                         <span>{tile}</span>
                     </AppRailTile>
                 {/each}
@@ -107,12 +102,19 @@
                     <GeneralKnowledgeView />
                 </div>
             {/if}
-            <div>
-                <ScratchpadView />
-            </div>
-            {#if $currentTile == Tile.Extend}
+            {#if [Tile.Transcripts, Tile.Similarity, Tile.GeneralKnowledge, Tile.WriteScript].includes($currentTile)}
                 <div>
-                    <DraftingView />
+                    <ScratchpadView />
+                </div>
+            {/if}
+            {#if $currentTile == Tile.WriteScript}
+                <div>
+                    <WriteScriptView />
+                </div>
+            {/if}
+            {#if $currentTile == Tile.Conversation}
+                <div class="col-span-2">
+                    <ConversationView />
                 </div>
             {/if}
         </div>

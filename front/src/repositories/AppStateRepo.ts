@@ -26,7 +26,7 @@ export class _AppStateRepo {
         await this.api.post(`/app_state/${app_id}/name`, {name});
     }
 
-    async delte(app_id: string) {
+    async delete(app_id: string) {
         await this.api.delete(`/app_state/${app_id}`);
     }
 }

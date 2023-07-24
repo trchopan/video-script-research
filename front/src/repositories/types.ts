@@ -2,7 +2,8 @@ export enum Tile {
     Transcripts = 'Transcripts',
     Similarity = 'Similarity',
     GeneralKnowledge = 'General Knowledge',
-    Extend = 'Extend',
+    WriteScript = 'Write Script',
+    Conversation = 'Conversation',
 }
 
 export interface AppState {
@@ -36,3 +37,35 @@ export interface YoutubeSimilarity {
     similarity: number;
     start: number;
 }
+
+export interface Conversation {
+    conversation_id: string;
+    name: string;
+    timestamp: Date;
+    system_prompt: string;
+    memory: Memory[];
+}
+
+export interface Memory {
+    type: string;
+    data: MemoryData;
+}
+
+export interface MemoryData {
+    content: string;
+    additional_kwargs: object;
+    example: boolean;
+}
+
+export enum ConversationChatToolEnum {
+    Wikipedia = 'wikipedia',
+    DuckduckGo = 'duckduckgo',
+}
+
+export interface ConversationChatToolData {
+    data?: object;
+}
+
+export type ConversationChatToolsRecord = Partial<
+    Record<ConversationChatToolEnum, ConversationChatToolData>
+>;

@@ -12,7 +12,7 @@ def get_db():
     )
 
 
-class BaseModel(Model):
+class BaseDBModel(Model):
     class Meta:
         database = get_db()
 

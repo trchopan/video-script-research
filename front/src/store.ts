@@ -7,11 +7,17 @@ import {
 } from '@/repositories/types';
 import {AppStateRepo, YoutubeRepo} from './repositories/inject';
 import {debounce, isEmpty} from 'lodash';
-import { MediaRecorderService } from './services/mediaRecorder';
+import {MediaRecorderService} from './services/mediaRecorder';
 
 export const openTranscript = writable(false);
 
-export const tileOptions = [Tile.Transcripts, Tile.Similarity, Tile.GeneralKnowledge, Tile.Extend];
+export const tileOptions = [
+    Tile.Transcripts,
+    Tile.Similarity,
+    Tile.GeneralKnowledge,
+    Tile.WriteScript,
+    Tile.Conversation,
+];
 export const currentTile = writable<Tile>(Tile.Transcripts);
 
 export const videos = writable<YoutubeVideo[]>([]);

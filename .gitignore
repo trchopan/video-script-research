@@ -5,5 +5,5 @@ secret.yaml
 .env
 service-account.json
 
-/ai/static
+/static
 db-data

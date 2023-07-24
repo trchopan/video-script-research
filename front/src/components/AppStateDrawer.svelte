@@ -23,7 +23,7 @@
     };
 
     const onDeleteAppState = async (app_id: string) => {
-        await AppStateRepo.delte(app_id);
+        await AppStateRepo.delete(app_id);
         await loadAppStates();
     };
 

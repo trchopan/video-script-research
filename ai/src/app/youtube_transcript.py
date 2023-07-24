@@ -17,10 +17,10 @@ from app.vector_store import VectorStore
 from app.helpers import find_element
 
 
-from .base_model import BaseModel, from_int, from_str, get_db, to_float
+from .base_model import BaseDBModel, from_int, from_str, get_db, to_float
 
 
-class YoutubeVideo(BaseModel):
+class YoutubeVideo(BaseDBModel):
     video_id = CharField()
     thumbnail = CharField(max_length=1024)
     title = CharField()
@@ -41,7 +41,7 @@ class YoutubeVideo(BaseModel):
         }
 
 
-class YoutubeTranscript(BaseModel):
+class YoutubeTranscript(BaseDBModel):
     video_id = CharField()
     chunk = IntegerField()
     start = FloatField()

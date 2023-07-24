@@ -1,0 +1,31 @@
+.conversation-content {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p {
+        padding-top: 0.75rem;
+        padding-bottom: 1rem;
+    }
+    ul,
+    ol {
+        padding-left: 1.2rem;
+    }
+    ul {
+        list-style: circle;
+    }
+    ol {
+        list-style: number;
+    }
+}
+
+.conversation-content {
+    max-width: 100%;
+    pre {
+        max-width: 100%;
+        overflow-x: scroll;
+        white-space: pre-wrap;
+    }
+}

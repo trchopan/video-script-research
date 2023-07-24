@@ -28,10 +28,15 @@
     "dependencies": {
         "@skeletonlabs/skeleton": "^1.8.0",
         "@types/lodash": "^4.14.195",
+        "@types/marked": "^5.0.1",
         "axios": "^1.4.0",
         "date-fns": "^2.30.0",
         "lodash": "^4.17.21",
+        "marked": "^5.1.1",
         "sass": "^1.63.6",
         "svelte-preprocess": "^5.0.4"
+    },
+    "volta": {
+        "node": "20.4.0"
     }
 }
