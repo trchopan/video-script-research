@@ -9,7 +9,12 @@ from langchain.memory import ConversationBufferMemory
 from langchain.prompts import MessagesPlaceholder
 from langchain.schema import SystemMessage, messages_from_dict, messages_to_dict
 from peewee import CharField, DateTimeField, TextField
-from langchain.tools import BaseTool, DuckDuckGoSearchRun, WikipediaQueryRun
+from langchain.tools import (
+    BaseTool,
+    DuckDuckGoSearchRun,
+    WikipediaQueryRun,
+    YouTubeSearchTool,
+)
 from langchain.utilities import WikipediaAPIWrapper
 from pydantic import BaseModel
 import wikipedia
@@ -28,6 +33,7 @@ class ConversationChatToolEnum(str, Enum):
     llm_math = "llm-math"
     wikipedia = "wikipedia"
     duckduckgo = "duckduckgo"
+    youtube = "youtube"
 
 
 class Conversation(BaseDBModel):
@@ -114,6 +120,10 @@ class ConversationService:
             if tool == ConversationChatToolEnum.duckduckgo:
                 duckduckgo_tool = DuckDuckGoSearchRun()
                 agent_tools.append(duckduckgo_tool)
+
+            if tool == ConversationChatToolEnum.youtube:
+                youtube_tool = YouTubeSearchTool()
+                agent_tools.append(youtube_tool)
 
         print("===", [t.name for t in agent_tools])
         return agent_tools

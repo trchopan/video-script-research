@@ -79,7 +79,8 @@
     let tools: ToolOption[] = [];
     const toolOptions: ToolOption[] = [
         {name: 'Wikipedia', value: ConversationChatToolEnum.Wikipedia},
-        {name: 'DuckduckGo', value: ConversationChatToolEnum.DuckduckGo},
+        {name: 'Duckduck Go', value: ConversationChatToolEnum.DuckduckGo},
+        {name: 'Youtube', value: ConversationChatToolEnum.Youtube},
     ];
 
     const onSelectToolOption = (opt: ToolOption) => {

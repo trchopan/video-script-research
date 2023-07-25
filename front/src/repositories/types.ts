@@ -60,6 +60,7 @@ export interface MemoryData {
 export enum ConversationChatToolEnum {
     Wikipedia = 'wikipedia',
     DuckduckGo = 'duckduckgo',
+    Youtube = 'youtube',
 }
 
 export interface ConversationChatToolData {
