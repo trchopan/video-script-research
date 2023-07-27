@@ -57,8 +57,10 @@
     <ul class="list-nav max-h-[10rem]">
         {#each appStates as appState}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-noninteractive-element-to-interactive-role -->
             <li
                 class="px-3 flex place-content-between items-center"
+                role="button"
                 on:click={() => onSelectAppState(appState.app_id)}
             >
                 {#if editingAppId === appState.app_id}
