@@ -26,9 +26,7 @@ class AssistantWriterService:
 
     def extend_content_with_context(self, content: str, context: list[str]):
         context_str = "\n---\n".join(context)
-        prompt = self._extend_content_template.format_prompt(
-            context=context_str, content=content
-        )
+        prompt = self._extend_content_template.format_prompt(context=context_str, content=content)
         result = send_chat_prompt_with_print(self.chat, prompt)
         return result.content
 
@@ -81,5 +79,8 @@ class AssistantWriterService:
         return result.content
 
     def get_chat(self, chat: str):
-        result = self.chat([HumanMessage(content=chat)])
+        result = send_chat_prompt_with_print(
+            self.chat,
+            ChatPromptTemplate.from_messages([HumanMessage(content=chat)]).format_prompt(),
+        )
         return result.content

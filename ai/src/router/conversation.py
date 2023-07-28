@@ -1,5 +1,3 @@
-from enum import Enum
-from typing import Optional
 from fastapi import APIRouter
 from pydantic import BaseModel
 from app import conversation_svc
@@ -7,11 +5,6 @@ from app.conversation import ConversationChatToolData, ConversationChatToolEnum
 
 
 conversation_router = APIRouter()
-
-
-@conversation_router.get("/conversation_templates")
-def conversation_templates():
-    return {"templates": conversation_svc.get_templates()}
 
 
 @conversation_router.get("/conversation_list")
@@ -55,9 +48,7 @@ class ConversationUpdateSystemPrompt(BaseModel):
 
 
 @conversation_router.post("/conversation/{conversation_id}/system_prompt")
-def conversation_update_system_prompt(
-    conversation_id: str, body: ConversationUpdateSystemPrompt
-):
+def conversation_update_system_prompt(conversation_id: str, body: ConversationUpdateSystemPrompt):
     result = conversation_svc.update_system_prompt(conversation_id, body.system_prompt)
     return {"conversation": result.to_dict()}
 

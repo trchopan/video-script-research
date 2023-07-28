@@ -4,6 +4,7 @@ export enum Tile {
     GeneralKnowledge = 'General Knowledge',
     WriteScript = 'Write Script',
     Conversation = 'Conversation',
+    SystemPrompt = 'System Prompt'
 }
 
 export interface AppState {
@@ -70,3 +71,10 @@ export interface ConversationChatToolData {
 export type ConversationChatToolsRecord = Partial<
     Record<ConversationChatToolEnum, ConversationChatToolData>
 >;
+
+export interface SystemPrompt {
+    _id: number;
+    name: string;
+    template: string;
+    timestamp: string;
+}

@@ -26,9 +26,10 @@
     import WriteScriptView from './components/WriteScriptView.svelte';
     import {Tile} from './repositories/types';
     import YoutubeView from './components/YoutubeView.svelte';
-    import GeneralKnowledgeView from './components/GeneralKnowledgeView.svelte';
     import AppStateDrawer from './components/AppStateDrawer.svelte';
-    import ConversationView from './components/ConversationView.svelte';
+    import GeneralKnowledgeView from './views/GeneralKnowledge/index.svelte';
+    import ConversationView from './views/Conversation/index.svelte';
+    import SystemPromptDrawer from './views/SystemPromptDrawer/index.svelte';
 
     onMount(async () => {
         loadAppState();
@@ -46,6 +47,8 @@
         <VideosDrawer />
     {:else if drawer === 'app-state-drawer'}
         <AppStateDrawer />
+    {:else if drawer === 'system-prompt-drawer'}
+        <SystemPromptDrawer />
     {/if}
 </Drawer>
 
@@ -69,6 +72,12 @@
             {/if}
             <svelte:fragment slot="trail">
                 {#if $currentAppId}
+                    <AppRailAnchor
+                        class="cursor-pointer"
+                        on:click={() => drawerStore.open({id: 'system-prompt-drawer'})}
+                    >
+                        <span>System Prompts</span>
+                    </AppRailAnchor>
                     <AppRailAnchor
                         class="cursor-pointer"
                         on:click={() => drawerStore.open({id: 'videos-drawer'})}

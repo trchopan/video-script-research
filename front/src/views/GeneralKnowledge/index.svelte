@@ -1,9 +1,9 @@
 <script lang="ts">
     import {contexts, multipleSearchResults, searchResult} from '@/store';
-    import TextToParagraph from './TextToParagraph.svelte';
     import {GeneralKnowledgeRepo} from '@/repositories/inject';
-    import Loading from './Loading.svelte';
     import {getSelectionText} from '@/helpers';
+    import TextToParagraph from '@/components/TextToParagraph.svelte';
+    import Loading from '@/components/Loading.svelte';
 
     let loading = false;
     let search = '';

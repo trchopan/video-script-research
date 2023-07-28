@@ -1,13 +1,13 @@
 <script lang="ts">
-    import {ConversationRepo} from '@/repositories/inject';
+    import {ConversationRepo, SystemPromptRepo} from '@/repositories/inject';
     import {onMount, tick} from 'svelte';
-    import Loading from './Loading.svelte';
     import {
         ConversationChatToolEnum,
         type Conversation,
         type ConversationChatToolsRecord,
     } from '@/repositories/types';
     import {cloneDeep, noop} from 'lodash';
+    import Loading from '@/components/Loading.svelte';
     import ConversationContent from './ConversationContent.svelte';
 
     let chatRef: HTMLElement;
@@ -25,7 +25,7 @@
     };
 
     const loadTemplates = async () => {
-        templates = await ConversationRepo.templates();
+        templates = await SystemPromptRepo.list();
     };
 
     const conversationScrollIntoView = () => {
@@ -45,15 +45,14 @@
 
     const onDeleteConversation = async (conversation_id: string) => {
         await ConversationRepo.delete(conversation_id);
+        if (selectedConversation.conversation_id === conversation_id) {
+            selectedConversation = null;
+        }
         await loadConversation();
-        selectedConversation = null;
     };
 
     const onSelectConversation = async (conversation_id: string) => {
         selectedConversation = await ConversationRepo.get(conversation_id);
-        selectedConversation.memory.forEach((m, i) =>
-            i % 2 === 1 ? console.log(m.data.content) : console.log('-')
-        );
         localSystemPrompt = selectedConversation.system_prompt;
         await tick();
         conversationScrollIntoView();
@@ -135,7 +134,10 @@
         <ul class="list max-h-[8rem] min-h-[6rem] overflow-y-scroll">
             {#each conversations as conversation}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <li class:selected={Math.random() > 0.8}>
+                <li
+                    class:selected={selectedConversation?.conversation_id ===
+                        conversation.conversation_id}
+                >
                     <!-- svelte-ignore a11y-interactive-supports-focus -->
                     <div
                         class="cursor-pointer w-full flex gap-3 items-center"
@@ -204,25 +206,27 @@
                         rows="4"
                         placeholder="System Prompt"
                     />
-                    <div class="flex gap-3">
-                        {#each templates as template}
-                            <button
-                                type="button"
-                                class="btn btn-sm variant-ringed-primary"
-                                on:click={() => onSelectTemplate(template.template)}
-                            >
-                                {template.name}
-                            </button>
-                        {/each}
-                        {#if isSystemPromptChanged}
-                            <button
-                                type="button"
-                                class="btn-icon btn-icon-sm"
-                                on:click={() => onSaveSystemPrompt()}
-                            >
-                                <span class="text-sm material-icons">save</span>
-                            </button>
-                        {/if}
+                    <div>
+                        <div class="flex gap-3">
+                            {#each templates as template}
+                                <button
+                                    type="button"
+                                    class="btn btn-sm variant-ringed-primary"
+                                    on:click={() => onSelectTemplate(template.template)}
+                                >
+                                    {template.name}
+                                </button>
+                            {/each}
+                            {#if isSystemPromptChanged}
+                                <button
+                                    type="button"
+                                    class="btn-icon btn-icon-sm"
+                                    on:click={() => onSaveSystemPrompt()}
+                                >
+                                    <span class="text-sm material-icons">save</span>
+                                </button>
+                            {/if}
+                        </div>
                     </div>
                 </div>
                 <div bind:this={chatRef} class="flex flex-col gap-3 text-md leading-7">
@@ -250,3 +254,9 @@
         </div>
     </div>
 </div>
+
+<style>
+    .selected {
+        @apply text-red-400;
+    }
+</style>

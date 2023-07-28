@@ -1,14 +1,15 @@
-from enum import Enum
 import json
+from enum import Enum
 from typing import List, Optional
 from uuid import uuid4
+
+import wikipedia
 from langchain import OpenAI
 from langchain.agents import AgentType, initialize_agent
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import MessagesPlaceholder
 from langchain.schema import SystemMessage, messages_from_dict, messages_to_dict
-from peewee import CharField, DateTimeField, TextField
 from langchain.tools import (
     BaseTool,
     DuckDuckGoSearchRun,
@@ -16,13 +17,13 @@ from langchain.tools import (
     YouTubeSearchTool,
 )
 from langchain.utilities import WikipediaAPIWrapper
+from peewee import CharField, DateTimeField, TextField
 from pydantic import BaseModel
-import wikipedia
 
-from app.tools.math_tool import MathTool
-from app.vector_store import VectorStore
 from app.base_model import BaseDBModel, get_db
 from app.helpers import get_timestamp
+from app.tools.math_tool import MathTool
+from app.vector_store import VectorStore
 
 
 class ConversationChatToolData(BaseModel):
@@ -61,9 +62,7 @@ class ConversationService:
         pass
 
     def list_all(self):
-        conversations: List[Conversation] = Conversation.select().order_by(
-            Conversation.timestamp
-        )
+        conversations: List[Conversation] = Conversation.select().order_by(Conversation.timestamp)
         return conversations
 
     def get(self, conversation_id: str) -> dict:
@@ -71,6 +70,9 @@ class ConversationService:
             Conversation.conversation_id == conversation_id
         )
         return conversation.to_dict()
+
+    _helpful_ai = """You are an helpful AI. Try to answer the question in clear and \
+informative way. Do not try to make up answer or hallucinate."""
 
     def create(self, name: str):
         conversation_id = str(uuid4())
@@ -160,23 +162,7 @@ class ConversationService:
         return conversation
 
     def delete(self, conversation_id: str):
-        Conversation.get(
-            Conversation.conversation_id == conversation_id
-        ).delete_instance()
-
-    _code_helper = """I want you to act as a software developer. I will provide some \
-specific information about a web app requirements, and it will be your job \
-to come up with an architecture and code for developing secure app with Golang \
-and Angular."""
-
-    _helpful_ai = """You are an helpful AI. Try to answer the question in clear and \
-informative way. Do not try to make up answer or hallucinate."""
-
-    def get_templates(self) -> list[dict]:
-        return [
-            {"name": "Software Developer", "template": self._code_helper},
-            {"name": "Helpful Assistant", "template": self._helpful_ai},
-        ]
+        Conversation.get(Conversation.conversation_id == conversation_id).delete_instance()
 
 
 # Create table if not exists

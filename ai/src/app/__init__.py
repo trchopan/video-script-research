@@ -12,6 +12,7 @@ from .vector_store import VectorStore
 from .general_knowledge import GeneralKnowledgeService
 from .youtube_transcript import YoutubeTranscriptService
 from .conversation import ConversationService
+from .system_prompt import SystemPromptService
 
 load_dotenv()
 
@@ -49,6 +50,7 @@ speech_svc = SpeechService(
 )
 
 conversation_svc = ConversationService(chat, llm, vector_store)
+system_prompt_svc = SystemPromptService()
 
 __all__ = [
     "app_state_svc",
@@ -56,4 +58,5 @@ __all__ = [
     "general_knowledge_svc",
     "speech_svc",
     "conversation_svc",
+    "system_prompt_svc",
 ]

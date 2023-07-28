@@ -39,11 +39,6 @@ export class _ConversationRepo {
         await this.api.delete(`/conversation/${conversation_id}`);
     }
 
-    async templates() {
-        const {data} = await this.api.get('/conversation_templates');
-        return data.templates as any[];
-    }
-
     async chat(conversation_id: string, chat: string, tools: ConversationChatToolsRecord) {
         const {data} = await this.api.post(`/conversation/${conversation_id}/chat`, {chat, tools});
         return data.conversation as Conversation;
