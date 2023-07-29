@@ -1,6 +1,7 @@
-from fastapi import HTTPException
-import openai
 import tempfile
+
+import openai
+from fastapi import HTTPException
 
 
 class SpeechService:
