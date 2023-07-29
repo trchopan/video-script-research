@@ -12,4 +12,4 @@
     });
 </script>
 
-<div class="text-blue-400 conversation-content">{@html localContent}</div>
+<div class="conversation-content">{@html localContent}</div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {ConversationRepo, SystemPromptRepo} from '@/repositories/inject';
+    import {ConversationRepo, SpeechRepo, SystemPromptRepo} from '@/repositories/inject';
     import {onMount, tick} from 'svelte';
     import {
         ConversationChatToolEnum,
@@ -9,11 +9,14 @@
     import {cloneDeep, noop} from 'lodash';
     import Loading from '@/components/Loading.svelte';
     import ConversationContent from './ConversationContent.svelte';
+    import TextToParagraph from '@/components/TextToParagraph.svelte';
+    import {mediaRecorderSvc} from '@/store';
 
     let chatRef: HTMLElement;
     let loadingName = false;
     let name = '';
     let loadingChat = false;
+    let prefix = '';
     let chat = '';
     let localSystemPrompt = '';
     let selectedConversation: Conversation | null = null;
@@ -97,9 +100,10 @@
             return acc;
         }, {} as ConversationChatToolsRecord);
         try {
+            const _prefix = prefix ? prefix + '\n' : '';
             selectedConversation = await ConversationRepo.chat(
                 selectedConversation.conversation_id,
-                chat,
+                _prefix + chat,
                 _tools
             );
             await tick();
@@ -118,6 +122,27 @@
             selectedConversation.conversation_id,
             selectedConversation.memory
         );
+    };
+
+    let isRecording = false;
+    let stopRecording: () => Promise<Blob[]>;
+
+    const onSpeak = async () => {
+        isRecording = true;
+        stopRecording = await mediaRecorderSvc.startRecord();
+    };
+
+    let audioRef: any;
+    const onStopRecord = async () => {
+        isRecording = false;
+        if (!stopRecording) return;
+        const chunks = await stopRecording();
+        const blob = new Blob(chunks, {type: 'audio/ogg; codecs=opus'});
+        const audioURL = window.URL.createObjectURL(blob);
+        audioRef.src = audioURL;
+        console.log('>>src', audioRef.src);
+        const transcriptResp = await SpeechRepo.transcript(blob);
+        chat += '\n---\n' + transcriptResp;
     };
 </script>
 
@@ -162,37 +187,68 @@
         <hr />
 
         {#if selectedConversation}
-            <div>
-                <select
-                    class="select"
-                    multiple
-                    bind:value={tools}
-                    on:click|preventDefault={() => noop()}
-                >
-                    {#each toolOptions as tOpt}
-                        <option
-                            value={tOpt}
-                            on:mousedown|preventDefault={() => onSelectToolOption(tOpt)}
-                        >
-                            {tOpt.name}
-                        </option>
-                    {/each}
-                </select>
+            <div class="flex flex-wrap gap-3">
+                {#each toolOptions as tOpt}
+                    <button
+                        type="button"
+                        class="btn btn-sm"
+                        class:variant-filled-primary={tools.includes(tOpt)}
+                        on:click={() => onSelectToolOption(tOpt)}
+                    >
+                        {tOpt.name}
+                    </button>
+                {/each}
             </div>
+            <hr />
             <div class="flex flex-col gap-5">
+                <input
+                    bind:value={prefix}
+                    class="input"
+                    type="text"
+                    placeholder="Template ex: PARAGRAPH, CONTEXT"
+                />
                 <textarea
                     bind:value={chat}
                     class="textarea leading-7"
-                    rows="3"
+                    rows="5"
                     placeholder="New Chat"
                 />
-                <button
-                    on:click={() => onChat()}
-                    class="btn variant-filled-primary"
-                    disabled={loadingChat}
-                >
-                    Chat
-                </button>
+                <div class="flex gap-5">
+                    {#if !isRecording}
+                        <button
+                            type="button"
+                            class="btn variant-ringed-primary btn-sm"
+                            on:click={() => onSpeak()}
+                        >
+                            Speak
+                        </button>
+                        {#if audioRef?.src.length > 0}
+                            <button
+                                type="button"
+                                class="btn-icon btn-icon-sm"
+                                on:click={() => audioRef.play()}
+                            >
+                                <span class="text-sm material-icons">play_circle_filled</span>
+                            </button>
+                        {/if}
+                    {:else}
+                        <button
+                            type="button"
+                            class="btn variant-ringed-error btn-sm"
+                            on:click={() => onStopRecord()}
+                        >
+                            Stop
+                        </button>
+                    {/if}
+                    <audio bind:this={audioRef} />
+                    <button
+                        on:click={() => onChat()}
+                        class="btn variant-filled-primary w-full"
+                        disabled={loadingChat}
+                    >
+                        Chat
+                    </button>
+                </div>
             </div>
         {/if}
     </div>
@@ -206,8 +262,8 @@
                         rows="4"
                         placeholder="System Prompt"
                     />
-                    <div>
-                        <div class="flex gap-3">
+                    <div class="flex gap-3 items-start place-content-between">
+                        <div class="flex flex-wrap gap-3">
                             {#each templates as template}
                                 <button
                                     type="button"
@@ -217,16 +273,16 @@
                                     {template.name}
                                 </button>
                             {/each}
-                            {#if isSystemPromptChanged}
-                                <button
-                                    type="button"
-                                    class="btn-icon btn-icon-sm"
-                                    on:click={() => onSaveSystemPrompt()}
-                                >
-                                    <span class="text-sm material-icons">save</span>
-                                </button>
-                            {/if}
                         </div>
+                        {#if isSystemPromptChanged}
+                            <button
+                                type="button"
+                                class="btn-icon btn-icon-sm text-red-400"
+                                on:click={() => onSaveSystemPrompt()}
+                            >
+                                <span class="text-sm material-icons">save</span>
+                            </button>
+                        {/if}
                     </div>
                 </div>
                 <div bind:this={chatRef} class="flex flex-col gap-3 text-md leading-7">
@@ -235,8 +291,10 @@
                             <hr />
                         {/if}
                         {#if memory.type == 'human'}
-                            <div class="flex gap-2 place-content-between text-pink-400">
-                                <div>{memory.data.content}</div>
+                            <div class="flex gap-2 place-content-between items-start text-pink-400">
+                                <div class="conversation-content">
+                                    <TextToParagraph text={memory.data.content} />
+                                </div>
                                 <button
                                     type="button"
                                     class="btn-icon btn-icon-sm text-orange-400"
@@ -246,7 +304,9 @@
                                 </button>
                             </div>
                         {:else if memory.type == 'ai'}
-                            <ConversationContent content={memory.data.content} />
+                            <div class="text-blue-400">
+                                <ConversationContent content={memory.data.content} />
+                            </div>
                         {/if}
                     {/each}
                 </div>
