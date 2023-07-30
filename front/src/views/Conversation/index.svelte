@@ -1,16 +1,17 @@
 <script lang="ts">
-    import {ConversationRepo, SpeechRepo, SystemPromptRepo} from '@/repositories/inject';
+    import {ConversationRepo, SystemPromptRepo} from '@/repositories/inject';
     import {onMount, tick} from 'svelte';
     import {
         ConversationChatToolEnum,
         type Conversation,
         type ConversationChatToolsRecord,
     } from '@/repositories/types';
-    import {cloneDeep, noop} from 'lodash';
+    import {cloneDeep} from 'lodash';
     import Loading from '@/components/Loading.svelte';
     import ConversationContent from './ConversationContent.svelte';
     import TextToParagraph from '@/components/TextToParagraph.svelte';
-    import {mediaRecorderSvc} from '@/store';
+    import {popup} from '@skeletonlabs/skeleton';
+    import Speak from '@/components/Speak.svelte';
 
     let chatRef: HTMLElement;
     let loadingName = false;
@@ -70,15 +71,23 @@
         );
     };
 
+    const onUndoSystemPrompt = async () => {
+        localSystemPrompt = selectedConversation.system_prompt;
+    };
+
     const onSelectTemplate = async (template: string) => {
         localSystemPrompt = template;
     };
 
+    let tools: ConversationChatToolEnum[] = [
+        ConversationChatToolEnum.Wikipedia,
+        ConversationChatToolEnum.DuckduckGo,
+        ConversationChatToolEnum.Youtube,
+    ];
     interface ToolOption {
         name: string;
         value: ConversationChatToolEnum;
     }
-    let tools: ToolOption[] = [];
     const toolOptions: ToolOption[] = [
         {name: 'Wikipedia', value: ConversationChatToolEnum.Wikipedia},
         {name: 'Duckduck Go', value: ConversationChatToolEnum.DuckduckGo},
@@ -86,17 +95,17 @@
     ];
 
     const onSelectToolOption = (opt: ToolOption) => {
-        if (tools.map(t => t.name).includes(opt.name)) {
-            tools = tools.filter(t => t.name !== opt.name);
+        if (tools.includes(opt.value)) {
+            tools = tools.filter(t => t !== opt.value);
         } else {
-            tools = tools.concat(opt);
+            tools = tools.concat(opt.value);
         }
     };
 
     const onChat = async () => {
         loadingChat = true;
         const _tools = tools.reduce((acc, cur) => {
-            acc[cur.value] = {};
+            acc[cur] = {};
             return acc;
         }, {} as ConversationChatToolsRecord);
         try {
@@ -124,25 +133,8 @@
         );
     };
 
-    let isRecording = false;
-    let stopRecording: () => Promise<Blob[]>;
-
-    const onSpeak = async () => {
-        isRecording = true;
-        stopRecording = await mediaRecorderSvc.startRecord();
-    };
-
-    let audioRef: any;
-    const onStopRecord = async () => {
-        isRecording = false;
-        if (!stopRecording) return;
-        const chunks = await stopRecording();
-        const blob = new Blob(chunks, {type: 'audio/ogg; codecs=opus'});
-        const audioURL = window.URL.createObjectURL(blob);
-        audioRef.src = audioURL;
-        console.log('>>src', audioRef.src);
-        const transcriptResp = await SpeechRepo.transcript(blob);
-        chat += '\n---\n' + transcriptResp;
+    const onTranscript = (transcript: string) => {
+        chat += '\n---\n' + transcript;
     };
 </script>
 
@@ -160,6 +152,7 @@
             {#each conversations as conversation}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <li
+                    class="px-5 hover:bg-primary-200/[0.1]"
                     class:selected={selectedConversation?.conversation_id ===
                         conversation.conversation_id}
                 >
@@ -192,7 +185,7 @@
                     <button
                         type="button"
                         class="btn btn-sm"
-                        class:variant-filled-primary={tools.includes(tOpt)}
+                        class:variant-filled-primary={tools.includes(tOpt.value)}
                         on:click={() => onSelectToolOption(tOpt)}
                     >
                         {tOpt.name}
@@ -201,6 +194,63 @@
             </div>
             <hr />
             <div class="flex flex-col gap-5">
+                <div>
+                    <textarea
+                        bind:value={localSystemPrompt}
+                        class="textarea leading-7"
+                        rows="4"
+                        placeholder="System Prompt"
+                    />
+                    <div class="flex gap-3 items-start place-content-between">
+                        <button
+                            class="btn btn-sm variant-filled-primary"
+                            use:popup={{
+                                event: 'click',
+                                target: 'popupFeatured',
+                                placement: 'right',
+                            }}
+                        >
+                            Template
+                        </button>
+                        <div
+                            class="card p-5 shadow-xl z-10 max-h-[10rem] overflow-y-scroll"
+                            data-popup="popupFeatured"
+                        >
+                            <ul class="list">
+                                {#each templates as template}
+                                    <li>
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm variant-ringed-primary"
+                                            on:click={() => onSelectTemplate(template.template)}
+                                        >
+                                            {template.name}
+                                        </button>
+                                    </li>
+                                {/each}
+                            </ul>
+                        </div>
+
+                        {#if isSystemPromptChanged}
+                            <div class="flex gap-3">
+                                <button
+                                    type="button"
+                                    class="btn-icon btn-icon-sm-red-400"
+                                    on:click={() => onUndoSystemPrompt()}
+                                >
+                                    <span class="text-sm material-icons">undo</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn-icon btn-icon-sm text-red-400"
+                                    on:click={() => onSaveSystemPrompt()}
+                                >
+                                    <span class="text-sm material-icons">save</span>
+                                </button>
+                            </div>
+                        {/if}
+                    </div>
+                </div>
                 <input
                     bind:value={prefix}
                     class="input"
@@ -214,33 +264,7 @@
                     placeholder="New Chat"
                 />
                 <div class="flex gap-5">
-                    {#if !isRecording}
-                        <button
-                            type="button"
-                            class="btn variant-ringed-primary btn-sm"
-                            on:click={() => onSpeak()}
-                        >
-                            Speak
-                        </button>
-                        {#if audioRef?.src.length > 0}
-                            <button
-                                type="button"
-                                class="btn-icon btn-icon-sm"
-                                on:click={() => audioRef.play()}
-                            >
-                                <span class="text-sm material-icons">play_circle_filled</span>
-                            </button>
-                        {/if}
-                    {:else}
-                        <button
-                            type="button"
-                            class="btn variant-ringed-error btn-sm"
-                            on:click={() => onStopRecord()}
-                        >
-                            Stop
-                        </button>
-                    {/if}
-                    <audio bind:this={audioRef} />
+                    <Speak transcriptCb={onTranscript} />
                     <button
                         on:click={() => onChat()}
                         class="btn variant-filled-primary w-full"
@@ -255,36 +279,6 @@
     <div class="relative h-full">
         <div class="absolute top-0 left-0 right-0 bottom-0 overflow-y-scroll flex flex-col gap-5">
             {#if selectedConversation}
-                <div>
-                    <textarea
-                        bind:value={localSystemPrompt}
-                        class="textarea leading-7"
-                        rows="4"
-                        placeholder="System Prompt"
-                    />
-                    <div class="flex gap-3 items-start place-content-between">
-                        <div class="flex flex-wrap gap-3">
-                            {#each templates as template}
-                                <button
-                                    type="button"
-                                    class="btn btn-sm variant-ringed-primary"
-                                    on:click={() => onSelectTemplate(template.template)}
-                                >
-                                    {template.name}
-                                </button>
-                            {/each}
-                        </div>
-                        {#if isSystemPromptChanged}
-                            <button
-                                type="button"
-                                class="btn-icon btn-icon-sm text-red-400"
-                                on:click={() => onSaveSystemPrompt()}
-                            >
-                                <span class="text-sm material-icons">save</span>
-                            </button>
-                        {/if}
-                    </div>
-                </div>
                 <div bind:this={chatRef} class="flex flex-col gap-3 text-md leading-7">
                     {#each selectedConversation.memory as memory, i}
                         {#if i % 2 == 0}

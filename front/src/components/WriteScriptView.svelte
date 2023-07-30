@@ -1,7 +1,8 @@
 <script lang="ts">
-    import {content, contexts, mediaRecorderSvc} from '@/store';
+    import {content, contexts} from '@/store';
     import Loading from './Loading.svelte';
-    import {AssistantRepo, SpeechRepo} from '@/repositories/inject';
+    import {AssistantRepo} from '@/repositories/inject';
+    import Speak from './Speak.svelte';
 
     let loading = false;
     const partialTool = async (fn: () => Promise<string>) => {
@@ -26,25 +27,8 @@
         partialTool(() => AssistantRepo.chat($content));
     };
 
-    let isRecording = false;
-    let stopRecording: () => Promise<Blob[]>;
-
-    const onRecord = async () => {
-        isRecording = true;
-        stopRecording = await mediaRecorderSvc.startRecord();
-    };
-
-    let audioRef: any;
-    const onStopRecord = async () => {
-        isRecording = false;
-        if (!stopRecording) return;
-        const chunks = await stopRecording();
-        const blob = new Blob(chunks, {type: 'audio/ogg; codecs=opus'});
-        const audioURL = window.URL.createObjectURL(blob);
-        audioRef.src = audioURL;
-        console.log('>>src', audioRef.src);
-        const transcriptResp = await SpeechRepo.transcript(blob);
-        content.set($content + '\n---\n' + transcriptResp);
+    const onTranscript = (transcript: string) => {
+        content.set($content + '\n---\n' + transcript);
     };
 </script>
 
@@ -77,33 +61,7 @@
             >
                 Chat
             </button>
-            {#if !isRecording}
-                <button
-                    type="button"
-                    class="btn variant-ringed-primary btn-sm"
-                    on:click={() => onRecord()}
-                >
-                    Speak
-                </button>
-                {#if audioRef?.src.length > 0}
-                    <button
-                        type="button"
-                        class="btn-icon btn-icon-sm"
-                        on:click={() => audioRef.play()}
-                    >
-                        <span class="text-sm material-icons">play_circle_filled</span>
-                    </button>
-                {/if}
-            {:else}
-                <button
-                    type="button"
-                    class="btn variant-ringed-error btn-sm"
-                    on:click={() => onStopRecord()}
-                >
-                    Stop
-                </button>
-            {/if}
-            <audio bind:this={audioRef} />
+            <Speak transcriptCb={onTranscript} />
         </Loading>
     </div>
 </div>
