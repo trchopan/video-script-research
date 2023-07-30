@@ -72,7 +72,7 @@ class ConversationService:
         return conversation.to_dict()
 
     _helpful_ai = """You are an helpful AI. Try to answer the question in clear and \
-informative way. Do not try to make up answer or hallucinate."""
+informative way. Do not try to make up or hallucinate new answer."""
 
     def create(self, name: str):
         conversation_id = str(uuid4())
