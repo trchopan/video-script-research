@@ -1,7 +1,12 @@
+from typing import List
 from fastapi import APIRouter
 from pydantic import BaseModel
 from app import conversation_svc
-from app.conversation import ConversationChatToolData, ConversationChatToolEnum
+from app.conversation import (
+    ConversationChatToolData,
+    ConversationChatToolEnum,
+    ConversationUpdateOrder,
+)
 
 
 conversation_router = APIRouter()
@@ -61,6 +66,16 @@ class ConversationUpdateMemory(BaseModel):
 def conversation_update_memory(conversation_id: str, body: ConversationUpdateMemory):
     result = conversation_svc.update_memory(conversation_id, body.memory)
     return {"conversation": result.to_dict()}
+
+
+class ConversationUpdateOrderRequest(BaseModel):
+    orders: List[ConversationUpdateOrder]
+
+
+@conversation_router.post("/conversation/orders")
+def conversation_update_orders(body: ConversationUpdateOrderRequest):
+    conversation_svc.update_orders(body.orders)
+    return {"conversations": [c.to_dict() for c in conversation_svc.list_all()]}
 
 
 class ConversationChat(BaseModel):

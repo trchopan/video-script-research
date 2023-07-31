@@ -4,7 +4,10 @@
 
     export let content: string;
 
-    $: localContent = marked.parse(content);
+    $: localContent = marked.parse(content, {
+        mangle: false,
+        headerIds: false,
+    });
 
     onMount(() => {
         // @ts-ignore

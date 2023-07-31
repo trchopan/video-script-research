@@ -6,7 +6,7 @@
         type Conversation,
         type ConversationChatToolsRecord,
     } from '@/repositories/types';
-    import {cloneDeep} from 'lodash';
+    import {cloneDeep, debounce} from 'lodash';
     import Loading from '@/components/Loading.svelte';
     import ConversationContent from './ConversationContent.svelte';
     import TextToParagraph from '@/components/TextToParagraph.svelte';
@@ -41,15 +41,31 @@
         await loadTemplates();
     });
 
+    const onResetFieldsForCreate = () => {
+        selectedConversation = null;
+        name = '';
+    };
+
     const onCreateConversation = async () => {
         await ConversationRepo.create(name);
         await loadConversation();
         name = '';
     };
 
-    const onDeleteConversation = async (conversation_id: string) => {
-        await ConversationRepo.delete(conversation_id);
-        if (selectedConversation.conversation_id === conversation_id) {
+    const onSaveConversation = async () => {
+        selectedConversation = await ConversationRepo.saveName(
+            selectedConversation.conversation_id,
+            name
+        );
+        const index = conversations.findIndex(
+            c => c.conversation_id === selectedConversation.conversation_id
+        );
+        conversations[index] = cloneDeep(selectedConversation);
+    };
+
+    const onDeleteConversation = async () => {
+        await ConversationRepo.delete(selectedConversation.conversation_id);
+        if (selectedConversation.conversation_id === selectedConversation.conversation_id) {
             selectedConversation = null;
         }
         await loadConversation();
@@ -58,6 +74,7 @@
     const onSelectConversation = async (conversation_id: string) => {
         selectedConversation = await ConversationRepo.get(conversation_id);
         localSystemPrompt = selectedConversation.system_prompt;
+        name = selectedConversation.name;
         await tick();
         conversationScrollIntoView();
     };
@@ -84,6 +101,7 @@
         ConversationChatToolEnum.DuckduckGo,
         ConversationChatToolEnum.Youtube,
     ];
+
     interface ToolOption {
         name: string;
         value: ConversationChatToolEnum;
@@ -136,43 +154,123 @@
     const onTranscript = (transcript: string) => {
         chat += '\n---\n' + transcript;
     };
+
+    let reorder = false;
+
+    const swapConversation = (curIndex: number, swapIndex: number) => {
+        const temp_conv = conversations[curIndex];
+        conversations[curIndex] = conversations[swapIndex];
+        conversations[swapIndex] = temp_conv;
+    };
+    const onMoveConversationUp = (index: number) => {
+        if (index === 0) return;
+        swapConversation(index, index - 1);
+        debouncedUpdateOrders();
+    };
+
+    const onMoveConversationDown = (index: number) => {
+        if (index === conversations.length - 1) return;
+        swapConversation(index, index + 1);
+        debouncedUpdateOrders();
+    };
+
+    const debouncedUpdateOrders = debounce(async () => {
+        conversations = await ConversationRepo.updateOrders(
+            conversations.map((conv, index) => ({
+                conversation_id: conv.conversation_id,
+                order: conversations.length - 1 - index,
+            }))
+        );
+    }, 500);
 </script>
 
 <div class="grid grid-cols-[1fr,1.5fr] gap-5 h-[95vh] overflow-y-hidden">
     <div class="flex flex-col gap-5 overflow-y-scroll">
         <Loading loading={loadingName}>
-            <div class="flex gap-5 items-center">
-                <input bind:value={name} class="input" type="text" placeholder="New Conversation" />
-                <button on:click={() => onCreateConversation()} class="btn variant-filled-primary">
-                    New
+            <div class="flex gap-3">
+                <button on:click={() => onResetFieldsForCreate()} class="btn btn-icon">
+                    <span class="text-sm material-icons">add</span>
                 </button>
+                <button
+                    on:click={() => (reorder = !reorder)}
+                    class="btn btn-icon"
+                    class:text-orange-400={reorder}
+                >
+                    <span class="text-sm material-icons">reorder</span>
+                </button>
+            </div>
+            <div class="flex gap-1 items-center">
+                <div class="w-full">
+                    <input
+                        bind:value={name}
+                        class="input w-full"
+                        type="text"
+                        placeholder="New Conversation"
+                    />
+                </div>
+                <div class="flex gap-1">
+                    {#if selectedConversation === null}
+                        <button
+                            on:click={() => onCreateConversation()}
+                            class="btn variant-filled-primary"
+                        >
+                            New
+                        </button>
+                    {:else}
+                        <button
+                            on:click={() => onSaveConversation()}
+                            class="btn btn-icon text-orange-400"
+                        >
+                            <span class="text-sm material-icons">save</span>
+                        </button>
+                        <button
+                            on:click={() => onDeleteConversation()}
+                            class="btn btn-icon text-red-400"
+                        >
+                            <span class="text-sm material-icons">delete</span>
+                        </button>
+                    {/if}
+                </div>
             </div>
         </Loading>
         <ul class="list max-h-[8rem] min-h-[6rem] overflow-y-scroll">
-            {#each conversations as conversation}
+            {#each conversations as conversation, i}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-noninteractive-element-to-interactive-role -->
                 <li
-                    class="px-5 hover:bg-primary-200/[0.1]"
+                    class="flex px-5 hover:bg-primary-200/[0.1]"
                     class:selected={selectedConversation?.conversation_id ===
                         conversation.conversation_id}
+                    role="button"
                 >
-                    <!-- svelte-ignore a11y-interactive-supports-focus -->
                     <div
-                        class="cursor-pointer w-full flex gap-3 items-center"
-                        role="button"
                         on:click={() => onSelectConversation(conversation.conversation_id)}
+                        class="py-1 cursor-pointer w-full"
                     >
-                        <div class="w-full">
-                            <span class="flex-auto">{conversation.name}</span>
-                        </div>
+                        <span class="flex-auto">{conversation.name}</span>
                     </div>
-                    <button
-                        type="button"
-                        class="btn-icon btn-icon-sm"
-                        on:click={() => onDeleteConversation(conversation.conversation_id)}
-                    >
-                        <span class="text-sm material-icons">delete</span>
-                    </button>
+                    {#if reorder}
+                        <div class="flex gap-1">
+                            {#if i > 0}
+                                <button
+                                    class="btn btn-icon btn-xs"
+                                    class:text-orange-400={reorder}
+                                    on:click={() => onMoveConversationUp(i)}
+                                >
+                                    <span class="text-xs material-icons">keyboard_arrow_up</span>
+                                </button>
+                            {/if}
+                            {#if i < conversations.length - 1}
+                                <button
+                                    class="btn btn-icon btn-xs"
+                                    class:text-orange-400={reorder}
+                                    on:click={() => onMoveConversationDown(i)}
+                                >
+                                    <span class="text-xs material-icons">keyboard_arrow_down</span>
+                                </button>
+                            {/if}
+                        </div>
+                    {/if}
                 </li>
             {/each}
         </ul>

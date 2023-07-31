@@ -25,7 +25,7 @@ class SystemPromptService:
             timestamp=get_timestamp(),
         )
         p.save()
-        return p 
+        return p
 
     def update(self, id: int, name: str, template: str):
         p = SystemPrompt.get(id)

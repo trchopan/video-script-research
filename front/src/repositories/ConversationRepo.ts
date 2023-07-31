@@ -1,6 +1,11 @@
 import type {AxiosInstance} from 'axios';
 import type {Conversation, ConversationChatToolsRecord} from './types';
 
+export interface ConversationOrder {
+    conversation_id: string;
+    order: number;
+}
+
 export class _ConversationRepo {
     constructor(private api: AxiosInstance) {}
 
@@ -42,5 +47,10 @@ export class _ConversationRepo {
     async chat(conversation_id: string, chat: string, tools: ConversationChatToolsRecord) {
         const {data} = await this.api.post(`/conversation/${conversation_id}/chat`, {chat, tools});
         return data.conversation as Conversation;
+    }
+
+    async updateOrders(orders: ConversationOrder[]) {
+        const {data} = await this.api.post('/conversation/orders', {orders});
+        return data.conversations as Conversation[];
     }
 }

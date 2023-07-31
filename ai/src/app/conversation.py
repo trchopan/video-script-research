@@ -17,13 +17,18 @@ from langchain.tools import (
     YouTubeSearchTool,
 )
 from langchain.utilities import WikipediaAPIWrapper
-from peewee import CharField, DateTimeField, TextField
+from peewee import CharField, DateTimeField, IntegerField, TextField
 from pydantic import BaseModel
 
 from app.base_model import BaseDBModel, get_db
 from app.helpers import get_timestamp
 from app.tools.math_tool import MathTool
 from app.vector_store import VectorStore
+
+
+class ConversationUpdateOrder(BaseModel):
+    conversation_id: str
+    order: int
 
 
 class ConversationChatToolData(BaseModel):
@@ -43,6 +48,7 @@ class Conversation(BaseDBModel):
     timestamp = DateTimeField()
     system_prompt = TextField()
     memory = TextField()
+    order = IntegerField()
 
     def to_dict(self):
         return {
@@ -51,6 +57,7 @@ class Conversation(BaseDBModel):
             "timestamp": self.timestamp,
             "system_prompt": self.system_prompt,
             "memory": json.loads(str(self.memory)),
+            "order": self.order,
         }
 
 
@@ -62,7 +69,9 @@ class ConversationService:
         pass
 
     def list_all(self):
-        conversations: List[Conversation] = Conversation.select().order_by(Conversation.timestamp)
+        conversations: List[Conversation] = Conversation.select().order_by(
+            Conversation.order.desc()
+        )
         return conversations
 
     def get(self, conversation_id: str) -> dict:
@@ -163,6 +172,13 @@ informative way. Do not try to make up or hallucinate new answer."""
 
     def delete(self, conversation_id: str):
         Conversation.get(Conversation.conversation_id == conversation_id).delete_instance()
+
+    @staticmethod
+    def update_orders(data: List[ConversationUpdateOrder]):
+        for d in data:
+            conversation = Conversation.get(Conversation.conversation_id == d.conversation_id)
+            conversation.order = d.order
+            conversation.save()
 
 
 # Create table if not exists
