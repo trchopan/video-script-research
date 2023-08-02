@@ -253,21 +253,25 @@
                         <div class="flex gap-1">
                             {#if i > 0}
                                 <button
-                                    class="btn btn-icon btn-xs"
+                                    class="btn btn-icon btn-xs w-5"
                                     class:text-orange-400={reorder}
                                     on:click={() => onMoveConversationUp(i)}
                                 >
                                     <span class="text-xs material-icons">keyboard_arrow_up</span>
                                 </button>
+                            {:else}
+                                <div class="w-5" />
                             {/if}
                             {#if i < conversations.length - 1}
                                 <button
-                                    class="btn btn-icon btn-xs"
+                                    class="btn btn-icon btn-xs w-5"
                                     class:text-orange-400={reorder}
                                     on:click={() => onMoveConversationDown(i)}
                                 >
                                     <span class="text-xs material-icons">keyboard_arrow_down</span>
                                 </button>
+                            {:else}
+                                <div class="w-5" />
                             {/if}
                         </div>
                     {/if}
