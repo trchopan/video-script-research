@@ -151,6 +151,10 @@
         );
     };
 
+    const onCopyContent = async (index: number) => {
+        console.log('>>>', selectedConversation.memory[index].data.content);
+    };
+
     const onTranscript = (transcript: string) => {
         chat += '\n---\n' + transcript;
     };
@@ -235,17 +239,17 @@
         </Loading>
         <ul class="list max-h-[8rem] min-h-[6rem] overflow-y-scroll">
             {#each conversations as conversation, i}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-noninteractive-element-to-interactive-role -->
                 <li
                     class="flex px-5 hover:bg-primary-200/[0.1]"
                     class:selected={selectedConversation?.conversation_id ===
                         conversation.conversation_id}
-                    role="button"
                 >
+                    <!-- svelte-ignore a11y-interactive-supports-focus -->
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                        on:click={() => onSelectConversation(conversation.conversation_id)}
+                        role="button"
                         class="py-1 cursor-pointer w-full"
+                        on:click={() => onSelectConversation(conversation.conversation_id)}
                     >
                         <span class="flex-auto">{conversation.name}</span>
                     </div>
@@ -400,7 +404,16 @@
                                 </button>
                             </div>
                         {:else if memory.type == 'ai'}
-                            <div class="text-blue-400">
+                            <div class="text-blue-400 relative">
+                                <div class="absolute right-0 top-[-1rem]">
+                                    <button
+                                        type="button"
+                                        class="btn-icon btn-icon-sm text-green-400 hover:opacity-100 opacity-50"
+                                        on:click={() => onCopyContent(i)}
+                                    >
+                                        <span class="text-sm material-icons">content_copy</span>
+                                    </button>
+                                </div>
                                 <ConversationContent content={memory.data.content} />
                             </div>
                         {/if}
