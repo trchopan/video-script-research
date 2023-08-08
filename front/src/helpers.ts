@@ -14,3 +14,8 @@ export function getSelectionText() {
     }
     return text;
 }
+
+export async function copyToClipboard(text: string) {
+    await navigator.clipboard.writeText(text);
+    console.log('Content copied to clipboard');
+}

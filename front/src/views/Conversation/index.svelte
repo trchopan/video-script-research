@@ -12,6 +12,7 @@
     import TextToParagraph from '@/components/TextToParagraph.svelte';
     import {popup} from '@skeletonlabs/skeleton';
     import Speak from '@/components/Speak.svelte';
+    import {copyToClipboard} from '@/helpers';
 
     let chatRef: HTMLElement;
     let loadingName = false;
@@ -153,6 +154,7 @@
 
     const onCopyContent = async (index: number) => {
         console.log('>>>', selectedConversation.memory[index].data.content);
+        await copyToClipboard(selectedConversation.memory[index].data.content);
     };
 
     const onTranscript = (transcript: string) => {
