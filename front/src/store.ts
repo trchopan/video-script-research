@@ -129,11 +129,12 @@ export const initYtPlayer = () => {
             },
         });
     // For debug
-    // (window as any).ytPlayer = ytPlayer
+    (window as any).ytPlayer = ytPlayer;
 };
 export const playYtPlayer = (video_id: string, start: number) => {
     if (ytPlayer.getVideoData().video_id === video_id) {
         ytPlayer.seekTo(start);
+        ytPlayer.playVideo();
     } else {
         ytPlayer.loadVideoById({videoId: video_id, startSeconds: start});
     }
