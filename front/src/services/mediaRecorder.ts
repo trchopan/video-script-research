@@ -17,6 +17,7 @@ export class MediaRecorderService {
             console.log('getUserMedia not supported on your browser!');
         }
     }
+    private timeout: any;
 
     async startRecord(): Promise<() => Promise<Blob[]>> {
         if (!this.mediaRecorder) {
@@ -29,9 +30,10 @@ export class MediaRecorderService {
             this.chunks.push(e.data);
         };
 
-        let timeout: any;
         const cb = () => {
-            timeout?.close?.();
+            if (this.timeout) {
+                clearTimeout(this.timeout);
+            }
             if (!this.mediaRecorder) return;
 
             this.mediaRecorder.stop();
@@ -51,7 +53,7 @@ export class MediaRecorderService {
             });
         };
 
-        timeout = setTimeout(() => {
+        this.timeout = setTimeout(() => {
             if (!this.mediaRecorder) return;
             console.error('Timeout mediaRecorder still active after start');
             cb();

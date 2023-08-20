@@ -19,7 +19,5 @@ class SpeechService:
                 fb.write(audio_file)
 
             with open(tmpfile, "rb") as fb:
-                transcript = openai.Audio.transcribe(
-                    "whisper-1", fb, api_key=self.openai_api_key
-                )
+                transcript = openai.Audio.transcribe("whisper-1", fb, api_key=self.openai_api_key)
                 return transcript.text  # type: ignore
