@@ -29,6 +29,7 @@
     import AppStateDrawer from './components/AppStateDrawer.svelte';
     import GeneralKnowledgeView from './views/GeneralKnowledge/index.svelte';
     import ConversationView from './views/Conversation/index.svelte';
+    import LearnJapaneseView from './views/LearnJapanese/index.svelte';
     import SystemPromptDrawer from './views/SystemPromptDrawer/index.svelte';
 
     onMount(async () => {
@@ -124,6 +125,11 @@
             {#if $currentTile == Tile.Conversation}
                 <div class="col-span-2">
                     <ConversationView />
+                </div>
+            {/if}
+            {#if $currentTile == Tile.LearnJapanese}
+                <div class="col-span-2">
+                    <LearnJapaneseView />
                 </div>
             {/if}
         </div>

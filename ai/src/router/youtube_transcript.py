@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import List
 from app import youtube_transcript_svc
 from fastapi import APIRouter
@@ -12,39 +13,47 @@ def list_youtube_videos():
     return {"videos": [v.to_dict() for v in youtube_transcript_svc.get_videos()]}
 
 
-class YoutubeVideo(BaseModel):
-    link: str
-
-
-@youtube_transcript_router.post("/youtube_video")
-def youtube_video(body: YoutubeVideo, clear_cache: bool = False):
-    youtube_video = youtube_transcript_svc.get_video_details(
-        body.link, clear_cache=clear_cache
-    )
+@youtube_transcript_router.get("/youtube_video/{video_id}")
+def youtube_video(video_id: str):
+    youtube_video = youtube_transcript_svc.get_video(video_id)
     return {"youtube_video": youtube_video.to_dict()}
 
 
-class GetYoutubeTranscript(BaseModel):
-    link: str
-
-
-@youtube_transcript_router.post("/get_youtube_transcript")
-def get_youtube_transcript(body: GetYoutubeTranscript, clear_cache: bool = False):
-    transcripts = youtube_transcript_svc.get_parsed_transcript(
-        body.link, clear_cache=clear_cache
-    )
+@youtube_transcript_router.get("/youtube_transcript/{video_id}")
+def get_youtube_transcript(video_id: str):
+    transcripts = youtube_transcript_svc.get_transcript(video_id)
     return {
         "transcripts": [transcript.to_dict() for transcript in transcripts],
     }
 
 
-class GetYoutubeTranscriptEmbedding(BaseModel):
-    link: str
+@youtube_transcript_router.delete("/youtube_video/{video_id}")
+def delete_youtube_video(video_id: str):
+    return youtube_transcript_svc.delete_youtube_video_id(video_id)
 
 
-@youtube_transcript_router.post("/get_youtube_transcript_embedding")
-def get_youtube_transcript_embedding(body: GetYoutubeTranscriptEmbedding):
-    embeddings = youtube_transcript_svc.get_embeddings(body.link)
+class LanguageEnum(str, Enum):
+    En = "en"
+    Ja = "ja"
+
+
+class PostYoutubeTranscript(BaseModel):
+    video_id: str
+    language: LanguageEnum
+
+
+@youtube_transcript_router.post("/youtube_transcript")
+def post_youtube_transcript(body: PostYoutubeTranscript):
+    youtube_transcript_svc.pull_video_details(body.video_id)
+    transcripts = youtube_transcript_svc.parse_transcript(body.video_id, language=body.language)
+    return {
+        "transcripts": [transcript.to_dict() for transcript in transcripts],
+    }
+
+
+@youtube_transcript_router.post("/youtube_transcript_embedding/{video_id}")
+def get_youtube_transcript_embedding(video_id: str):
+    embeddings = youtube_transcript_svc.get_embeddings(video_id)
     return {"embeddings": embeddings}
 
 

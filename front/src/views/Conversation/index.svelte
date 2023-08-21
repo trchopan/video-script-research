@@ -22,6 +22,7 @@
     let chat = '';
     let localSystemPrompt = '';
     let selectedConversation: Conversation | null = null;
+    let editMemory = '';
     let conversations = [];
     let templates = [];
 
@@ -155,6 +156,21 @@
     const onCopyContent = async (index: number) => {
         console.log('>>>', selectedConversation.memory[index].data.content);
         await copyToClipboard(selectedConversation.memory[index].data.content);
+    };
+
+    let editIndex = -1;
+    const onEditContent = async (index: number) => {
+        editIndex = index;
+        editMemory = selectedConversation.memory[index].data.content;
+    };
+
+    const onSaveContent = async (index: number) => {
+        editIndex = -1;
+        selectedConversation.memory[index].data.content = editMemory;
+        await ConversationRepo.saveMemory(
+            selectedConversation.conversation_id,
+            selectedConversation.memory
+        );
     };
 
     const onTranscript = (transcript: string) => {
@@ -407,16 +423,43 @@
                             </div>
                         {:else if memory.type == 'ai'}
                             <div class="text-blue-400 relative">
-                                <div class="absolute right-0 top-[-1rem]">
-                                    <button
-                                        type="button"
-                                        class="btn-icon btn-icon-sm text-green-400 hover:opacity-100 opacity-50"
-                                        on:click={() => onCopyContent(i)}
-                                    >
-                                        <span class="text-sm material-icons">content_copy</span>
-                                    </button>
+                                <div class="absolute right-0 top-[-1rem] flex flex-col gap-3">
+                                    {#if editIndex === i}
+                                        <button
+                                            type="button"
+                                            class="btn-icon btn-icon-sm text-green-400 hover:opacity-100 opacity-50"
+                                            on:click={() => onSaveContent(i)}
+                                        >
+                                            <span class="text-sm material-icons">save</span>
+                                        </button>
+                                    {:else}
+                                        <button
+                                            type="button"
+                                            class="btn-icon btn-icon-sm text-green-400 hover:opacity-100 opacity-50"
+                                            on:click={() => onCopyContent(i)}
+                                        >
+                                            <span class="text-sm material-icons">content_copy</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="btn-icon btn-icon-sm text-green-400 hover:opacity-100 opacity-50"
+                                            on:click={() => onEditContent(i)}
+                                        >
+                                            <span class="text-sm material-icons">edit</span>
+                                        </button>
+                                    {/if}
                                 </div>
-                                <ConversationContent content={memory.data.content} />
+
+                                {#if editIndex === i}
+                                    <textarea
+                                        bind:value={editMemory}
+                                        class="textarea leading-7"
+                                        rows="4"
+                                        placeholder="Edit Memory"
+                                    />
+                                {:else}
+                                    <ConversationContent content={memory.data.content} />
+                                {/if}
                             </div>
                         {/if}
                     {/each}

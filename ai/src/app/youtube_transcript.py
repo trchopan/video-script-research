@@ -1,5 +1,6 @@
 from datetime import datetime
 from multiprocessing.pool import ThreadPool
+from fastapi import HTTPException, status
 import requests
 from typing import List, Tuple
 from urllib.parse import parse_qs, urlparse
@@ -46,13 +47,15 @@ class YoutubeTranscript(BaseDBModel):
     chunk = IntegerField()
     start = FloatField()
     text = TextField()
+    learn_japanese = TextField()
 
     def to_dict(self):
         return {
-            # "video_id": self.video_id,
+            "video_id": self.video_id,
             "chunk": self.chunk,
             "start": self.start,
             "text": self.text,
+            "learn_japanese": self.learn_japanese,
         }
 
 
@@ -99,44 +102,41 @@ class YoutubeTranscriptService:
     def __init__(
         self,
         api_key: str,
-        chat: ChatOpenAI,
+        chat35: ChatOpenAI,
         embeddings: OpenAIEmbeddings,
         vector_store: VectorStore,
     ):
         self.api_key = api_key
-        self.chat = chat
+        self.chat35 = chat35
         self.embeddings = embeddings
         self.vector_store = vector_store
 
     _puncturation_prompt = ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
-                "Below is a Script that missing punctuation. "
-                "Help add in the approriate punctuations in the Output\n\n"
-                "Script:\n{script}\n\n"
+                "I want you to format and put in correct punctuations for the below text."
             ),
-            HumanMessagePromptTemplate.from_template("Text:"),
+            HumanMessagePromptTemplate.from_template("{text}"),
         ]
     )
 
+    def delete_youtube_video_id(self, video_id: str):
+        YoutubeVideo.delete().where(YoutubeVideo.video_id == video_id).execute()
+        YoutubeTranscript.delete().where(YoutubeTranscript.video_id == video_id).execute()
+
     def get_videos(self):
-        videos: list[YoutubeVideo] = list(YoutubeVideo.select())
+        videos: list[YoutubeVideo] = list(YoutubeVideo.select().order_by(YoutubeVideo.publish_at))
         return videos
 
-    def get_video_details(self, link: str, clear_cache: bool = False) -> YoutubeVideo:
-        video_id = self.get_youtube_video_id(link) or ""
+    def get_video(self, video_id: str) -> YoutubeVideo:
+        obj: YoutubeVideo = YoutubeVideo.get(YoutubeVideo.video_id == video_id)
+        if obj is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-        if clear_cache:
-            YoutubeVideo.delete().where(YoutubeVideo.video_id == video_id).execute()
+        return obj
 
-        else:
-            try:
-                yt_video: YoutubeVideo = YoutubeVideo.get(
-                    YoutubeVideo.video_id == video_id
-                )
-                return yt_video
-            except Exception as e:
-                print("cannot get video details", e)
+    def pull_video_details(self, video_id: str) -> YoutubeVideo:
+        YoutubeVideo.delete().where(YoutubeVideo.video_id == video_id).execute()
 
         # Start processing new video
 
@@ -145,9 +145,7 @@ class YoutubeTranscriptService:
             "part": "contentDetails,snippet",
             "key": self.api_key,
         }
-        response = requests.get(
-            "https://www.googleapis.com/youtube/v3/videos", params=payload
-        )
+        response = requests.get("https://www.googleapis.com/youtube/v3/videos", params=payload)
         if response.status_code != 200:
             print(response.text)
             raise Exception("error getting youtube details")
@@ -168,39 +166,36 @@ class YoutubeTranscriptService:
 
         return yt_video
 
-    def get_parsed_transcript(
-        self, link: str, clear_cache: bool = False
-    ) -> list[YoutubeTranscript]:
-        self.get_video_details(link, clear_cache=clear_cache)
+    def get_transcript(self, video_id: str) -> list[YoutubeTranscript]:
+        transcripts: List[YoutubeTranscript] = list(
+            YoutubeTranscript.select()
+            .where(YoutubeTranscript.video_id == video_id)
+            .order_by(YoutubeTranscript.chunk)
+        )
 
-        video_id = self.get_youtube_video_id(link) or ""
+        if transcripts is None or len(transcripts) == 0:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-        if clear_cache:
-            YoutubeTranscript.delete().where(
-                YoutubeTranscript.video_id == video_id
-            ).execute()
+        return transcripts
 
-            self.vector_store.delete_embeddings(
-                namespace=self._EMBEDDING_NAMESPACE,
-                document=video_id,
-            )
+    def parse_transcript(self, video_id: str, language="en") -> list[YoutubeTranscript]:
+        YoutubeTranscript.delete().where(YoutubeTranscript.video_id == video_id).execute()
 
-        else:
-            transcripts: List[YoutubeTranscript] = list(
-                YoutubeTranscript.select().where(YoutubeTranscript.video_id == video_id)
-            )
-
-            if transcripts is not None and len(transcripts) > 0:
-                return transcripts
+        self.vector_store.delete_embeddings(
+            namespace=self._EMBEDDING_NAMESPACE,
+            document=video_id,
+        )
 
         # Start processing new transcript
+
+        youtube_transcripts_: list[dict] = YouTubeTranscriptApi.get_transcript(
+            video_id, languages=(language,)
+        )
 
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=self._CHUNK_SIZE,
             chunk_overlap=self._CHUNK_OVERLAP,
         )
-
-        youtube_transcripts_: list[dict] = YouTubeTranscriptApi.get_transcript(video_id)
 
         # The following is a bit complicated
         # I'm trying to find out the chunk and the `start` time of that chunk by
@@ -217,15 +212,12 @@ class YoutubeTranscriptService:
                 if len(youtube_transcripts) > 2:
                     # Add a little bit of overlap
                     youtube_transcripts[-1]["text"] = (
-                        youtube_transcripts[-2]["text"][-20:]
-                        + youtube_transcripts[-1]["text"]
+                        youtube_transcripts[-2]["text"][-20:] + youtube_transcripts[-1]["text"]
                     )
             else:
                 youtube_transcripts[-1]["text"] += "\n" + t.get("text", "")
 
-        transcripts_fulltext = "\n".join(
-            [t.get("text", "").strip() for t in youtube_transcripts_]
-        )
+        transcripts_fulltext = "\n".join([t.get("text", "").strip() for t in youtube_transcripts_])
         splitted_texts = text_splitter.split_text(transcripts_fulltext)
         transcript_starts = []
 
@@ -242,19 +234,14 @@ class YoutubeTranscriptService:
                 youtube_transcripts,
                 lambda transcript: transcript_has_text(transcript, text),
             )
-            transcript_starts.append(
-                found.get("start", 0.0) if found is not None else 0.0
-            )
+            transcript_starts.append(found.get("start", 0.0) if found is not None else 0.0)
 
         # Start processing the functuation format in a ThreadPool
 
         def _process_puncturation(video_id: str, index: int, total: int, text: str):
-            print(
-                f">>> processing {self._EMBEDDING_NAMESPACE} {video_id}: "
-                f"{index + 1}/{total}"
-            )
-            prompt = self._puncturation_prompt.format_prompt(script=text)
-            result = self.chat(prompt.to_messages())
+            print(f">>> processing {self._EMBEDDING_NAMESPACE} {video_id}: " f"{index + 1}/{total}")
+            prompt = self._puncturation_prompt.format_prompt(text=text)
+            result = self.chat35(prompt.to_messages())
             embeddings = self.embeddings.embed_query(result.content)
             return index, result.content, embeddings
 
@@ -276,10 +263,7 @@ class YoutubeTranscriptService:
         transcripts = []
         for [(index, content, embeddings), start] in zip(results, transcript_starts):
             transcript = YoutubeTranscript(
-                video_id=video_id,
-                chunk=index,
-                start=start,
-                text=content,
+                video_id=video_id, chunk=index, start=start, text=content, learn_japanese=""
             )
             transcript.save()
 
@@ -294,8 +278,7 @@ class YoutubeTranscriptService:
 
         return transcripts
 
-    def get_embeddings(self, link: str):
-        video_id = self.get_youtube_video_id(link) or ""
+    def get_embeddings(self, video_id: str):
         embeddings = self.vector_store.get_embeddings(
             namespace=self._EMBEDDING_NAMESPACE, document=video_id
         )

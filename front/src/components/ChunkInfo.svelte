@@ -21,7 +21,7 @@
     };
 </script>
 
-<div class="flex items-center place-content-between pb-3 pr-3">
+<div class="flex items-center place-content-between py-3 px-3">
     <div class="text-stone-400 text-xs py-2">
         <span>Chunk: {chunk.chunk} | Time: {secondToDuration(chunk.start)}</span>
         <slot />

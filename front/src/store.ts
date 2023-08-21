@@ -17,6 +17,7 @@ export const tileOptions = [
     Tile.GeneralKnowledge,
     Tile.WriteScript,
     Tile.Conversation,
+    Tile.LearnJapanese,
 ];
 export const currentTile = writable<Tile>(Tile.Transcripts);
 
@@ -37,10 +38,13 @@ export const similarityQuery = writable('');
 export const similarities = writable<YoutubeSimilarity[]>([]);
 
 export const loadingNewVideoTranscript = writable<boolean>(false);
-export const getNewVideoTranscript = async (youtubeUrl: string) => {
+export const pullNewVideoTranscript = async (youtubeUrl: string, language: string) => {
     loadingNewVideoTranscript.set(true);
     try {
-        await YoutubeRepo.getVideoTranscript(YoutubeRepo.parseYoutubeVideoId(youtubeUrl), true);
+        await YoutubeRepo.pullVideoTranscript(
+            YoutubeRepo.parseYoutubeVideoId(youtubeUrl),
+            language
+        );
         await getVideos();
     } finally {
         loadingNewVideoTranscript.set(false);
@@ -131,14 +135,38 @@ export const initYtPlayer = () => {
     // For debug
     (window as any).ytPlayer = ytPlayer;
 };
+
+window.onkeydown = (e: KeyboardEvent) => {
+    if (!ytPlayer) return;
+
+    const seekLen = 3;
+    if (e.ctrlKey === true) {
+        if (e.key === 'a') {
+            ytPlayer.seekTo(ytPlayer.getCurrentTime() - seekLen);
+        }
+
+        if (e.key === 'd') {
+            ytPlayer.seekTo(ytPlayer.getCurrentTime() + seekLen);
+        }
+
+        if (e.key === 's') {
+            if (ytPlayer.getPlayerState() == 1) {
+                ytPlayer.pauseVideo();
+            } else {
+                ytPlayer.playVideo();
+            }
+        }
+    }
+};
+
 export const playYtPlayer = (video_id: string, start: number) => {
+    ytVideoShow.set(true);
     if (ytPlayer.getVideoData().video_id === video_id) {
         ytPlayer.seekTo(start);
         ytPlayer.playVideo();
     } else {
         ytPlayer.loadVideoById({videoId: video_id, startSeconds: start});
     }
-    ytVideoShow.set(true);
 };
 
 export const showYtPlayer = () => {

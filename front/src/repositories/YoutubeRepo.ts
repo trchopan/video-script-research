@@ -1,5 +1,5 @@
 import type {AxiosInstance} from 'axios';
-import type {YoutubeSimilarity, YoutubeTranscript, YoutubeVideo} from './types';
+import {YoutubeTranscript, type YoutubeSimilarity, type YoutubeVideo} from './types';
 
 export class _YoutubeRepo {
     constructor(private api: AxiosInstance) {}
@@ -15,15 +15,18 @@ export class _YoutubeRepo {
         return data.videos as YoutubeVideo[];
     }
 
-    async getVideoTranscript(video_id: string, clearCache: boolean = false) {
-        const {data} = await this.api.post(
-            '/get_youtube_transcript',
-            {
-                link: `https://www.youtube.com/watch?v=${video_id}`,
-            },
-            {params: {clear_cache: clearCache ? 1 : undefined}}
-        );
-        return data.transcripts as YoutubeTranscript[];
+    async getVideoTranscript(video_id: string) {
+        const {data} = await this.api.get(`/youtube_transcript/${video_id}`);
+        return (data.transcripts as any[]).map(YoutubeTranscript.fromApi);
+    }
+
+    async deleteVideo(video_id: string) {
+        await this.api.delete(`/youtube_video/${video_id}`);
+    }
+
+    async pullVideoTranscript(video_id: string, language: string) {
+        const {data} = await this.api.post('/youtube_transcript', {video_id, language});
+        return (data.transcripts as any[]).map(YoutubeTranscript.fromApi);
     }
 
     async getSimilarity(query: string, video_ids: string[]) {

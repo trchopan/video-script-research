@@ -1,13 +1,16 @@
 <script lang="ts">
     import {
-        getNewVideoTranscript,
+        pullNewVideoTranscript,
         loadingNewVideoTranscript,
         researchVideoIds,
         videos,
+        getVideos,
     } from '@/store';
     import Loading from './Loading.svelte';
+    import {YoutubeRepo} from '@/repositories/inject';
 
     let youtubeUrl: string = '';
+    let language: string = 'en';
 
     const onToggleResearchVideoIds = (video_id: string) => {
         if ($researchVideoIds.includes(video_id)) {
@@ -18,8 +21,13 @@
     };
 
     const onAddNewVideoTranscript = () => {
-        getNewVideoTranscript(youtubeUrl);
+        pullNewVideoTranscript(youtubeUrl, language);
         youtubeUrl = '';
+    };
+
+    const onDeleteVideo = async (video_id: string) => {
+        await YoutubeRepo.deleteVideo(video_id);
+        await getVideos();
     };
 </script>
 
@@ -27,6 +35,10 @@
     <Loading loading={$loadingNewVideoTranscript}>
         <div class="flex gap-5 items-center">
             <input bind:value={youtubeUrl} class="input" type="text" placeholder="Input" />
+            <select bind:value={language} class="select w-[12rem]">
+                <option value="en">English</option>
+                <option value="ja">Japanese</option>
+            </select>
             <button on:click={() => onAddNewVideoTranscript()} class="btn variant-ringed-secondary">
                 Add
             </button>
@@ -34,18 +46,25 @@
     </Loading>
     <ul class="list max-h-[10rem]">
         {#each $videos as video}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <li
-                on:click={() => onToggleResearchVideoIds(video.video_id)}
-                class:selected={$researchVideoIds.includes(video.video_id)}
-                class="pr-3"
-            >
-                <div class="w-32 h-20 flex items-center pl-3">
-                    <img src={video.thumbnail} class="object-cover" alt={video.title} />
+            <li class:selected={$researchVideoIds.includes(video.video_id)} class="flex gap-5">
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    on:click={() => onToggleResearchVideoIds(video.video_id)}
+                    class="flex items-center gap-3 grow"
+                >
+                    <div class="w-32 h-20 flex items-center pl-3">
+                        <img src={video.thumbnail} class="object-cover" alt={video.title} />
+                    </div>
+                    <div class="w-full">
+                        <span class="flex-auto">{video.title}</span>
+                    </div>
                 </div>
-                <div class="w-full">
-                    <span class="flex-auto">{video.title}</span>
-                </div>
+                <button
+                    on:click={() => onDeleteVideo(video.video_id)}
+                    class="btn btn-icon text-red-400"
+                >
+                    <span class="text-sm material-icons">delete</span>
+                </button>
             </li>
         {/each}
     </ul>

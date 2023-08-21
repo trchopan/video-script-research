@@ -62,9 +62,8 @@ class Conversation(BaseDBModel):
 
 
 class ConversationService:
-    def __init__(self, chat: ChatOpenAI, llm: OpenAI, vector_store: VectorStore):
+    def __init__(self, chat: ChatOpenAI, vector_store: VectorStore):
         self.chat = chat
-        self.llm = llm
         self.vector_store = vector_store
         pass
 

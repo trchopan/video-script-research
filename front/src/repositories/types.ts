@@ -1,10 +1,13 @@
+import {last} from 'lodash';
+
 export enum Tile {
     Transcripts = 'Transcripts',
     Similarity = 'Similarity',
     GeneralKnowledge = 'General Knowledge',
     WriteScript = 'Write Script',
     Conversation = 'Conversation',
-    SystemPrompt = 'System Prompt'
+    SystemPrompt = 'System Prompt',
+    LearnJapanese = 'Learn Japanese',
 }
 
 export interface AppState {
@@ -24,10 +27,49 @@ export interface YoutubeVideo {
     publish_at: Date;
 }
 
-export interface YoutubeTranscript {
+export interface LearnJapaneseExplaination {
+    japanese: string;
+    romaji: string;
+    english: string;
+}
+
+export class LearnJapanese {
+    japanese: string;
+    english: string;
+    romaji: string;
+    explainations: LearnJapaneseExplaination[];
+
+    static fromApi({japanese, english, romaji, explainations}: any): LearnJapanese {
+        return {
+            japanese,
+            english,
+            romaji,
+            explainations: explainations.map((e: string) => ({
+                text: e,
+                japanese: e.split(' (')[0],
+                english: last(e.split(' - '))!,
+                romaji: e.match(/\((.*)\)/)[1],
+            })),
+        };
+    }
+}
+
+export class YoutubeTranscript {
     chunk: number;
     start: number;
     text: string;
+    learn_japanese: LearnJapanese[];
+
+    static fromApi({chunk, start, text, learn_japanese}: any): YoutubeTranscript {
+        const o = new YoutubeTranscript();
+        o.chunk = chunk;
+        o.start = start;
+        o.text = text;
+        o.learn_japanese = (learn_japanese ? JSON.parse(learn_japanese) : []).map(
+            LearnJapanese.fromApi
+        );
+        return o;
+    }
 }
 
 export interface YoutubeSimilarity {

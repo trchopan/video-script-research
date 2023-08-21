@@ -1,0 +1,38 @@
+Translate:
+    prompt: >
+        I want you to translate the text below to English with Romaji form.
+
+
+        Also give some explanations about each part of the translation.
+
+
+        {format_instructions}
+
+    few_shots:
+        - type: human
+          message: はい。 先に進んで右折してください。 それからあなたはそこにいます。
+        - type: ai
+          message: >
+              {{
+                  "english": "Yes. Proceed and make a right turn. Then you will be there.",
+                  "romaji": "Hai. Saki ni susunde migi gire shite kudasai. Sore kara anata wa soko ni imasu.",
+                  "explainations": [
+                      "はい (Hai) - Yes",
+                      "先に進んで (Saki ni susunde) - Proceed",
+                      "右折してください (Migi gire shite kudasai) - Make a right turn",
+                      "それから (Sore kara) - Then",
+                      "あなたはそこにいます (Anata wa soko ni imasu) - You will be there"
+                  ]
+              }}
+        - type: human
+          message: すてきな一日を。
+        - type: ai
+          message: >
+              {{
+                  "english": "Have a wonderful day.",
+                  "romaji": "Suteki na ichinichi o.",
+                  "explainations": [
+                      "すてきな (Suteki na) - wonderful",
+                      "一日 (Ichinichi) - day"
+                  ]
+              }}
