@@ -44,12 +44,18 @@ export class LearnJapanese {
             japanese,
             english,
             romaji,
-            explainations: explainations.map((e: string) => ({
-                text: e,
-                japanese: e.split(' (')[0],
-                english: last(e.split(' - '))!,
-                romaji: e.match(/\((.*)\)/)[1],
-            })),
+            explainations: explainations
+                .map((e: string) => {
+                    const matches = e.match(/(.*) \[(.*)\] \[(.*)\]/);
+                    if (!matches) return null;
+                    return {
+                        text: e,
+                        japanese: matches[1],
+                        romaji: matches[2],
+                        english: matches[3],
+                    };
+                })
+                .filter(Boolean),
         };
     }
 }

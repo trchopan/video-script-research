@@ -1,7 +1,7 @@
 import json
 from pydantic import BaseModel, Field
 import yaml
-from typing import List, Optional
+from typing import List
 from langchain.output_parsers import PydanticOutputParser
 
 
@@ -74,7 +74,8 @@ class LearnJapaneseService(BaseService):
                 if c == comma_mark:
                     count_comma = count_comma + 1
 
-                if c in [dot_mark, question_mark] or count_comma > 3:
+                if c in [dot_mark, question_mark] or count_comma >= 3:
+                    """Found break sentence marks or there are more than 3 commas"""
                     sentences.append(acc + c)
                     acc = ""
                     count_comma = 0

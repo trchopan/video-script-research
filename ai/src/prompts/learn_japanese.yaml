@@ -17,11 +17,11 @@ Translate:
                   "english": "Yes. Proceed and make a right turn. Then you will be there.",
                   "romaji": "Hai. Saki ni susunde migi gire shite kudasai. Sore kara anata wa soko ni imasu.",
                   "explainations": [
-                      "はい (Hai) - Yes",
-                      "先に進んで (Saki ni susunde) - Proceed",
-                      "右折してください (Migi gire shite kudasai) - Make a right turn",
-                      "それから (Sore kara) - Then",
-                      "あなたはそこにいます (Anata wa soko ni imasu) - You will be there"
+                      "はい [hai] [yes]",
+                      "先に進んで [saki ni susunde] [proceed]",
+                      "右折してください [migi gire shite kudasai] [make a right turn]",
+                      "それから [sore kara] [then]",
+                      "そこにいます [soko ni imasu] [will be there]"
                   ]
               }}
         - type: human
@@ -32,7 +32,38 @@ Translate:
                   "english": "Have a wonderful day.",
                   "romaji": "Suteki na ichinichi o.",
                   "explainations": [
-                      "すてきな (Suteki na) - wonderful",
-                      "一日 (Ichinichi) - day"
+                      "すてきな [suteki na] [wonderful]",
+                      "一日 [ichinichi] [day]"
+                  ]
+              }}
+
+        - type: human
+          message: 本当にね、自然も満喫できるし、体の調子もいい。
+        - type: ai
+          message: >
+              {{
+                  "english": "Indeed, you can enjoy nature and feel good physically.",
+                  "romaji": "Hontō ni ne, shizen mo mankitsu dekiru shi, karada no chōshi mo ii.",
+                  "explainations": [
+                      "本当に [hontō ni] [indeed]",
+                      "自然 [shizen] [nature]",
+                      "満喫できる [mankitsu dekiru] [can enjoy]",
+                      "体の調子 [karada no chōshi] [physically]",
+                      "いい [ii] [good]"
+                  ]
+              }}
+        - type: ai
+          message: >
+              {{
+                  "english": "But even though I'm leaving tomorrow, I was able to create very much wonderful memories.",
+                  "romaji": "Demo ashita kaerun desu kedo, mo sugoku ne, suteki na omoide o tsukuru koto ga dekimashita.",
+                  "explainations": [
+                      "でも [demo] [but]",
+                      "明日 [ashita] [tomorrow]",
+                      "帰る [kaeru] [I'm leaving]",
+                      "んですけど [n desu kedo] [even though]",
+                      "もすごく [mo sugoku] [very much]",
+                      "素敵な [suteki na] [wonderful]",
+                      "思い出 [omoide] [memories]"
                   ]
               }}

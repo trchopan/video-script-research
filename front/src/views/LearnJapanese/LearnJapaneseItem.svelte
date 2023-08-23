@@ -78,8 +78,8 @@
     <div>
         {#each localExplaination as explaination, i}
             <div class={`grid grid-cols-[1fr,1fr,1fr] gap-3 ${explaination.color}`}>
-                <span>{explaination.japanese}</span>
                 <span>{explaination.romaji}</span>
+                <span>{explaination.japanese}</span>
                 <span>{explaination.english}</span>
             </div>
         {/each}
