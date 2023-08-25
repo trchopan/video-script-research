@@ -23,3 +23,9 @@ def send_chat_prompt_with_print(chat: ChatOpenAI, prompt: PromptValue) -> BaseMe
     print(result.content)
     print("===")
     return result
+
+
+def make_chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]

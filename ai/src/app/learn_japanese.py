@@ -1,4 +1,6 @@
 import json
+from multiprocessing.pool import ThreadPool
+from langchain.schema import OutputParserException
 from pydantic import BaseModel, Field
 import yaml
 from typing import List
@@ -31,58 +33,89 @@ class LearnJapaneseService(BaseService):
         """This function process sentences to it's romanji
         and breakdown the words inside with explaination
         """
-        results: List[LearnJapaneseService.TranslationResponse] = []
-        for sentence in sentences:
+        results: List[LearnJapaneseService.Translation] = []
+
+        total = len(sentences)
+
+        def _process_fn(index: int, sentence: str):
+            print(f">> Processing {index+1}/{total}")
             prompt = self._translate_prompt.format_prompt(
                 format_instructions=LearnJapaneseService._translation_parser.get_format_instructions(),
                 input=sentence.strip(),
             )
-            print(">>", prompt.to_string())
             response = self.chat_3(prompt.to_messages())
-            response: LearnJapaneseService.TranslationResponse = (
-                LearnJapaneseService._translation_parser.parse(response.content)
-            )
-            result = LearnJapaneseService.Translation(
+            try:
+                response: LearnJapaneseService.TranslationResponse = (
+                    LearnJapaneseService._translation_parser.parse(response.content)
+                )
+            except OutputParserException as e:
+                print("//!", sentence, "->", response.content)
+                raise e
+
+            return LearnJapaneseService.Translation(
                 japanese=sentence,
                 english=response.english,
                 romaji=response.romaji,
                 explainations=response.explainations,
             )
-            results.append(result)
+
+        with ThreadPool(processes=5) as pool:
+            workers = [pool.apply_async(_process_fn, (i, s)) for i, s in enumerate(sentences)]
+            for worker in workers:
+                result = worker.get()
+                results.append(result)
 
         return results
 
-    def process_youtube_video_chunks(self, video_id: str, chunks: List[int]):
-        video_transcripts = self.youtube_transcript_svc.get_transcript(video_id)
-
+    def break_text_to_chunks(self, text: str):
         dot_mark = "。"
         question_mark = "？"
         comma_mark = "、"
 
-        processed_video_chunks: List[YoutubeTranscript] = []
-
         def clean_japanese(s: str):
             return s.replace('"', "").replace("「", "").replace("」", "")
+
+        chunks: List[str] = []
+        count_comma = 0
+        acc = ""
+
+        for c in clean_japanese(str(text)):
+            if c == comma_mark:
+                count_comma = count_comma + 1
+
+            if c in [dot_mark, question_mark] or count_comma >= 3:
+                """Found break sentence marks or there are more than 3 commas"""
+
+                # Filter out the comma mark because it can trigger completion in Japanese.
+                # This is because the Japanese quality in the LLM is still weak in following
+                # instructions.
+                if c == comma_mark:
+                    next_char = ""
+                else:
+                    next_char = c
+
+                chunks.append(acc + next_char)
+                acc = ""
+                count_comma = 0
+            else:
+                acc = acc + c
+
+        return chunks
+
+    def process_text(self, text: str):
+        chunks = self.break_text_to_chunks(text)
+        return self.process_sentences(chunks)
+
+    def process_youtube_video_chunks(self, video_id: str, chunks: List[int]):
+        video_transcripts = self.youtube_transcript_svc.get_transcript(video_id)
+
+        processed_video_chunks: List[YoutubeTranscript] = []
 
         for chunk in chunks:
             video_transcript = video_transcripts[chunk]
 
-            sentences: List[str] = []
-            acc = ""
-            count_comma = 0
-            for c in clean_japanese(str(video_transcript.text)):
-                if c == comma_mark:
-                    count_comma = count_comma + 1
+            translated_sentences = self.process_text(str(video_transcript.text))
 
-                if c in [dot_mark, question_mark] or count_comma >= 3:
-                    """Found break sentence marks or there are more than 3 commas"""
-                    sentences.append(acc + c)
-                    acc = ""
-                    count_comma = 0
-                else:
-                    acc = acc + c
-
-            translated_sentences = self.process_sentences(sentences)
             video_transcript_db = YoutubeTranscript.get(
                 video_id=video_transcript.video_id, chunk=chunk
             )

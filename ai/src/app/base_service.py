@@ -88,5 +88,3 @@ class BaseService:
             )
         else:
             raise Exception("Cannot load BaseAISystem message templates")
-
-

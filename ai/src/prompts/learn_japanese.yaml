@@ -1,6 +1,7 @@
 Translate:
     prompt: >
-        I want you to translate the text below to English with Romaji form.
+        I want you to translate the text below to English and Romaji form. 
+        Do not try to complete the sentence or make up new words.
 
 
         Also give some explanations about each part of the translation.
@@ -50,20 +51,5 @@ Translate:
                       "満喫できる [mankitsu dekiru] [can enjoy]",
                       "体の調子 [karada no chōshi] [physically]",
                       "いい [ii] [good]"
-                  ]
-              }}
-        - type: ai
-          message: >
-              {{
-                  "english": "But even though I'm leaving tomorrow, I was able to create very much wonderful memories.",
-                  "romaji": "Demo ashita kaerun desu kedo, mo sugoku ne, suteki na omoide o tsukuru koto ga dekimashita.",
-                  "explainations": [
-                      "でも [demo] [but]",
-                      "明日 [ashita] [tomorrow]",
-                      "帰る [kaeru] [I'm leaving]",
-                      "んですけど [n desu kedo] [even though]",
-                      "もすごく [mo sugoku] [very much]",
-                      "素敵な [suteki na] [wonderful]",
-                      "思い出 [omoide] [memories]"
                   ]
               }}

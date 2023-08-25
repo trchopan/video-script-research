@@ -4,7 +4,6 @@ from typing import List, Optional
 from uuid import uuid4
 
 import wikipedia
-from langchain import OpenAI
 from langchain.agents import AgentType, initialize_agent
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
@@ -79,8 +78,9 @@ class ConversationService:
         )
         return conversation.to_dict()
 
-    _helpful_ai = """You are an helpful AI. Try to answer the question in clear and \
-informative way. Do not try to make up or hallucinate new answer."""
+    _helpful_ai = """\
+You are an helpful AI. Try to answer the question in clear and informative way. \
+Do not try to make up or hallucinate new answer."""
 
     def create(self, name: str):
         conversation_id = str(uuid4())
@@ -120,7 +120,7 @@ informative way. Do not try to make up or hallucinate new answer."""
         math_tool = MathTool(chat=self.chat)
         agent_tools: List[BaseTool] = [math_tool]
 
-        for tool, data in tools.items():
+        for tool, _ in tools.items():
             if tool == ConversationChatToolEnum.wikipedia:
                 wikipedia_tool = WikipediaQueryRun(
                     api_wrapper=WikipediaAPIWrapper(wiki_client=wikipedia)
