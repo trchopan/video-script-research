@@ -33,7 +33,7 @@ def create_chat_open_ai(model: str):
 
 chat_3 = create_chat_open_ai(model="gpt-3.5-turbo")
 chat_3_with_function = create_chat_open_ai(model="gpt-3.5-turbo-0613")
-chat_4 = create_chat_open_ai(model="gpt-4")
+chat_4 = create_chat_open_ai(model="gpt-4-1106-preview")
 chat_4_with_function = create_chat_open_ai(model="gpt-4-0613")
 
 llm = OpenAI(
