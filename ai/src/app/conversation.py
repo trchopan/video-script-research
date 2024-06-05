@@ -5,17 +5,17 @@ from uuid import uuid4
 
 import wikipedia
 from langchain.agents import AgentType, initialize_agent
-from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import MessagesPlaceholder
 from langchain.schema import SystemMessage, messages_from_dict, messages_to_dict
-from langchain.tools import (
-    BaseTool,
+from langchain.tools import BaseTool
+from langchain_openai import ChatOpenAI
+from langchain_community.tools import (
+    YouTubeSearchTool,
     DuckDuckGoSearchRun,
     WikipediaQueryRun,
-    YouTubeSearchTool,
 )
-from langchain.utilities import WikipediaAPIWrapper
+from langchain_community.utilities import WikipediaAPIWrapper
 from peewee import CharField, DateTimeField, IntegerField, TextField
 from pydantic import BaseModel
 
@@ -117,7 +117,7 @@ Do not try to make up or hallucinate new answer."""
         self,
         tools: dict[ConversationChatToolEnum, ConversationChatToolData],
     ):
-        math_tool = MathTool(chat=self.chat)
+        math_tool = MathTool(description="")
         agent_tools: List[BaseTool] = [math_tool]
 
         for tool, _ in tools.items():

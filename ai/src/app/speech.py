@@ -1,12 +1,12 @@
 import tempfile
 
-import openai
+from openai import OpenAI
 from fastapi import HTTPException
 
 
 class SpeechService:
-    def __init__(self, openai_api_key: str):
-        self.openai_api_key = openai_api_key
+    def __init__(self, api_key: str):
+        self.client = OpenAI(api_key=api_key)
 
     def get_transcript_whisper(self, audio_file: bytes):
         """This function takes an audio file and returns the transcript text"""
@@ -19,5 +19,5 @@ class SpeechService:
                 fb.write(audio_file)
 
             with open(tmpfile, "rb") as fb:
-                transcript = openai.Audio.transcribe("whisper-1", fb, api_key=self.openai_api_key)
+                transcript = self.client.audio.transcriptions.create(model="whisper-1", file=fb)
                 return transcript.text  # type: ignore

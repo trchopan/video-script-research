@@ -1,8 +1,7 @@
 import os
 from dotenv import load_dotenv
-from langchain import OpenAI
-from langchain.chat_models import ChatOpenAI
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_core.pydantic_v1 import SecretStr
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from app.base_service import BaseService
 
 from app.learn_japanese import LearnJapaneseService
@@ -24,24 +23,16 @@ vector_store = VectorStore(get_db)
 
 def create_chat_open_ai(model: str):
     return ChatOpenAI(
-        model_name=model,
+        model=model,
         temperature=0.3,
-        openai_api_key=os.environ["OPENAI_API_KEY"],
-        # max_tokens=5000,
-    )  # type: ignore
+        api_key=SecretStr(os.environ["OPENAI_API_KEY"]),
+    )
 
 
 chat_3 = create_chat_open_ai(model="gpt-3.5-turbo")
 chat_3_with_function = create_chat_open_ai(model="gpt-3.5-turbo-0613")
 chat_4 = create_chat_open_ai(model="gpt-4-1106-preview")
 chat_4_with_function = create_chat_open_ai(model="gpt-4-0613")
-
-llm = OpenAI(
-    model_name="text-davinci-003",
-    temperature=0.3,
-    openai_api_key=os.environ["OPENAI_API_KEY"],
-    # max_tokens=4000,
-)  # type: ignore
 
 embeddings = OpenAIEmbeddings(openai_api_key=os.environ["OPENAI_API_KEY"])  # type: ignore
 
@@ -55,15 +46,12 @@ youtube_transcript_svc = YoutubeTranscriptService(
 assistant_writer_svc = AssistantWriterService(chat_4)
 general_knowledge_svc = GeneralKnowledgeService(chat_4)
 
-speech_svc = SpeechService(
-    openai_api_key=os.environ["OPENAI_API_KEY"],
-)
+speech_svc = SpeechService(api_key=os.environ["OPENAI_API_KEY"])
 
 conversation_svc = ConversationService(chat_4, vector_store)
 system_prompt_svc = SystemPromptService()
 
 BaseService.load(
-    llm=llm,
     chat_3=chat_3,
     chat_3_with_function=chat_3_with_function,
     chat_4=chat_4,

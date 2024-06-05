@@ -1,6 +1,5 @@
 from typing import List
-from langchain.llms import OpenAI
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.prompts import (
     AIMessagePromptTemplate,
     ChatPromptTemplate,
@@ -14,13 +13,11 @@ class BaseService:
     @classmethod
     def load(
         cls,
-        llm: OpenAI,
         chat_3: ChatOpenAI,
         chat_3_with_function: ChatOpenAI,
         chat_4: ChatOpenAI,
         chat_4_with_function: ChatOpenAI,
     ):
-        cls.llm = llm
         cls.chat_3 = chat_3
         cls.chat_3_with_function = chat_3_with_function
         cls.chat_4 = chat_4

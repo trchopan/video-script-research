@@ -6,8 +6,7 @@ from typing import List, Tuple
 from urllib.parse import parse_qs, urlparse
 from peewee import CharField, DateTimeField, FloatField, IntegerField, TextField
 from youtube_transcript_api import YouTubeTranscriptApi
-from langchain.chat_models import ChatOpenAI
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.prompts import (
     ChatPromptTemplate,
@@ -242,6 +241,7 @@ class YoutubeTranscriptService:
             print(f">>> processing {self._EMBEDDING_NAMESPACE} {video_id}: " f"{index + 1}/{total}")
             prompt = self._puncturation_prompt.format_prompt(text=text)
             result = self.chat35(prompt.to_messages())
+            assert isinstance(result.content, str)
             embeddings = self.embeddings.embed_query(result.content)
             return index, result.content, embeddings
 

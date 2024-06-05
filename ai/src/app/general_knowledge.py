@@ -1,5 +1,6 @@
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 import wikipedia
+
 
 class GeneralKnowledgeService:
     def __init__(self, chat: ChatOpenAI):

@@ -1,5 +1,5 @@
 import datetime
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.schema import BaseMessage, PromptValue
 
 
@@ -11,7 +11,7 @@ def find_element(array, condition):
 
 
 def get_timestamp():
-    return datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+    return datetime.datetime.now(datetime.timezone.utc)
 
 
 def send_chat_prompt_with_print(chat: ChatOpenAI, prompt: PromptValue) -> BaseMessage:

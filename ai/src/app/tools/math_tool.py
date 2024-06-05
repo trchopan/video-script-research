@@ -6,18 +6,16 @@ from langchain.callbacks.manager import (
     AsyncCallbackManagerForToolRun,
     CallbackManagerForToolRun,
 )
-from langchain.chat_models import ChatOpenAI
 from langchain.tools.base import BaseTool
-from pydantic import Field
 from wikipedia import re
 
 
 class MathTool(BaseTool):
     """Useful for when you need to answer questions about math.
-This tool is only for math questions and nothing else.
+    This tool is only for math questions and nothing else.
 
-Formulate the input as python code.
-"""
+    Formulate the input as python code.
+    """
 
     name = "MathTool"
     description = """Useful for when you need to answer questions about math.
@@ -25,7 +23,6 @@ This tool is only for math questions and nothing else.
 
 Formulate the input as python code.
 """
-    chat: ChatOpenAI = Field(exclude=True)
 
     def _run(
         self,
