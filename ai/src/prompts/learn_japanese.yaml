@@ -10,10 +10,8 @@ Translate:
         {format_instructions}
 
     few_shots:
-        - type: human
-          message: はい。 先に進んで右折してください。 それからあなたはそこにいます。
-        - type: ai
-          message: >
+        - human: はい。 先に進んで右折してください。 それからあなたはそこにいます。
+          ai: >
               {{
                   "english": "Yes. Proceed and make a right turn. Then you will be there.",
                   "romaji": "Hai. Saki ni susunde migi gire shite kudasai. Sore kara anata wa soko ni imasu.",
@@ -25,10 +23,8 @@ Translate:
                       "そこにいます [soko ni imasu] [will be there]"
                   ]
               }}
-        - type: human
-          message: すてきな一日を。
-        - type: ai
-          message: >
+        - human: すてきな一日を。
+          ai: >
               {{
                   "english": "Have a wonderful day.",
                   "romaji": "Suteki na ichinichi o.",
@@ -38,10 +34,8 @@ Translate:
                   ]
               }}
 
-        - type: human
-          message: 本当にね、自然も満喫できるし、体の調子もいい。
-        - type: ai
-          message: >
+        - human: 本当にね、自然も満喫できるし、体の調子もいい。
+          ai: >
               {{
                   "english": "Indeed, you can enjoy nature and feel good physically.",
                   "romaji": "Hontō ni ne, shizen mo mankitsu dekiru shi, karada no chōshi mo ii.",

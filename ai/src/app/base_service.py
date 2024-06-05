@@ -13,13 +13,9 @@ class BaseService:
     @classmethod
     def load(
         cls,
-        chat_3: ChatOpenAI,
-        chat_3_with_function: ChatOpenAI,
         chat_4: ChatOpenAI,
         chat_4_with_function: ChatOpenAI,
     ):
-        cls.chat_3 = chat_3
-        cls.chat_3_with_function = chat_3_with_function
         cls.chat_4 = chat_4
         cls.chat_4_with_function = chat_4_with_function
 

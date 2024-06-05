@@ -29,17 +29,15 @@ def create_chat_open_ai(model: str):
     )
 
 
-chat_3 = create_chat_open_ai(model="gpt-3.5-turbo")
-chat_3_with_function = create_chat_open_ai(model="gpt-3.5-turbo-0613")
-chat_4 = create_chat_open_ai(model="gpt-4-1106-preview")
-chat_4_with_function = create_chat_open_ai(model="gpt-4-0613")
+chat_4 = create_chat_open_ai(model="gpt-4o")
+chat_4_with_function = create_chat_open_ai(model="gpt-4o")
 
 embeddings = OpenAIEmbeddings(openai_api_key=os.environ["OPENAI_API_KEY"])  # type: ignore
 
 app_state_svc = AppStateService()
 youtube_transcript_svc = YoutubeTranscriptService(
     api_key=os.environ["YOUTUBE_API_KEY"],
-    chat35=chat_3,
+    chat=chat_4,
     embeddings=embeddings,
     vector_store=vector_store,
 )
@@ -52,8 +50,6 @@ conversation_svc = ConversationService(chat_4, vector_store)
 system_prompt_svc = SystemPromptService()
 
 BaseService.load(
-    chat_3=chat_3,
-    chat_3_with_function=chat_3_with_function,
     chat_4=chat_4,
     chat_4_with_function=chat_4_with_function,
 )

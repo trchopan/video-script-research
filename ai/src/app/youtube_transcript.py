@@ -101,12 +101,12 @@ class YoutubeTranscriptService:
     def __init__(
         self,
         api_key: str,
-        chat35: ChatOpenAI,
+        chat: ChatOpenAI,
         embeddings: OpenAIEmbeddings,
         vector_store: VectorStore,
     ):
         self.api_key = api_key
-        self.chat35 = chat35
+        self.chat = chat
         self.embeddings = embeddings
         self.vector_store = vector_store
 
@@ -240,7 +240,7 @@ class YoutubeTranscriptService:
         def _process_puncturation(video_id: str, index: int, total: int, text: str):
             print(f">>> processing {self._EMBEDDING_NAMESPACE} {video_id}: " f"{index + 1}/{total}")
             prompt = self._puncturation_prompt.format_prompt(text=text)
-            result = self.chat35(prompt.to_messages())
+            result = self.chat(prompt.to_messages())
             assert isinstance(result.content, str)
             embeddings = self.embeddings.embed_query(result.content)
             return index, result.content, embeddings

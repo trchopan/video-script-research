@@ -1,5 +1,11 @@
 import json
 from multiprocessing.pool import ThreadPool
+from langchain.prompts import (
+    ChatPromptTemplate,
+    FewShotChatMessagePromptTemplate,
+    PromptTemplate,
+    SystemMessagePromptTemplate,
+)
 from langchain.schema import OutputParserException
 from pydantic import BaseModel, Field
 import yaml
@@ -16,8 +22,7 @@ class LearnJapaneseService(BaseService):
         self.youtube_transcript_svc = youtube_transcript_svc
         with open("./prompts/learn_japanese.yaml") as f:
             config = yaml.safe_load(f)
-
-        self._translate_prompt = BaseService.load_messages(config, "Translate")
+            self._translate_prompt = config
 
     class TranslationResponse(BaseModel):
         english: str = Field(description="English translation")
@@ -39,24 +44,48 @@ class LearnJapaneseService(BaseService):
 
         def _process_fn(index: int, sentence: str):
             print(f">> Processing {index+1}/{total}")
+            parser = PydanticOutputParser(pydantic_object=LearnJapaneseService.TranslationResponse)
             prompt = self._translate_prompt.format_prompt(
                 format_instructions=LearnJapaneseService._translation_parser.get_format_instructions(),
                 input=sentence.strip(),
             )
-            response = self.chat_3(prompt.to_messages())
-            try:
-                response: LearnJapaneseService.TranslationResponse = (
-                    LearnJapaneseService._translation_parser.parse(response.content)
-                )
-            except OutputParserException as e:
-                print("//!", sentence, "->", response.content)
-                raise e
+            example_prompt = ChatPromptTemplate.from_messages(
+                [
+                    ("human", "{input}"),
+                    ("ai", "{output}"),
+                ]
+            )
+            examples_args = list(
+                map(lambda s: {"input": s[0], "output": s[1]}, self._translate_prompt["few_shots"])
+            )
+
+            few_shot_prompt = FewShotChatMessagePromptTemplate(
+                example_prompt=example_prompt,
+                examples=examples_args,
+            )
+
+            system_prompt = PromptTemplate(
+                template=self._translate_prompt["prompt"],
+                input_variables=["examples"],
+                partial_variables={"format_instructions": parser.get_format_instructions()},
+            )
+
+            prompt = ChatPromptTemplate.from_messages(
+                [
+                    SystemMessagePromptTemplate(prompt=system_prompt),
+                    few_shot_prompt,
+                    ("human", "{input}"),
+                ]
+            )
+            chain = prompt | self.chat_4
+            result = chain.invoke({"input": sentence})
+            resp: LearnJapaneseService.TranslationResponse = parser.invoke(result)
 
             return LearnJapaneseService.Translation(
                 japanese=sentence,
-                english=response.english,
-                romaji=response.romaji,
-                explainations=response.explainations,
+                english=resp.english,
+                romaji=resp.romaji,
+                explainations=resp.explainations,
             )
 
         with ThreadPool(processes=5) as pool:
